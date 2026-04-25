@@ -1,12 +1,16 @@
 from flask import Flask, render_template, request, redirect
 from supabase import create_client
-
+from dotenv import load_dotenv
 import os
+
+load_dotenv()
 
 url = os.getenv("SUPABASE_URL")
 key = os.getenv("SUPABASE_KEY")
 
 supabase = create_client(url, key)
+if not url or not key:
+    raise Exception("Missing Supabase credentials")
 
 app = Flask(__name__)
 
