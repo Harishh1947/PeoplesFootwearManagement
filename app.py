@@ -489,4 +489,5 @@ def admin():
             branch_cash_list=branch_cash_list,
             total_cash=total_cash
         )
-app.run(debug=True)
+    
+app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
