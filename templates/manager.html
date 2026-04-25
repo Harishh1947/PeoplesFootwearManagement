@@ -1,0 +1,216 @@
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/manager.css') }}">
+<script src="/static/script.js"></script>
+
+<div class="container">
+
+<h3>Opening Balance: ₹ {{ opening }}</h3>
+
+<form method="post">
+
+<!-- ===================== -->
+<!-- 📅 BASIC DETAILS -->
+<!-- ===================== -->
+<h4>Daily Entry</h4>
+
+<div class="form-grid">
+
+    <div>
+        <label>Date</label>
+        <input type="date" name="date" required>
+    </div>
+
+    <div>
+        <label>Daily Sale</label>
+        <input name="sale" type="number">
+    </div>
+
+    <div>
+        <label>General Expenses</label>
+        <input name="expenses" type="number">
+    </div>
+
+    <div>
+        <label>Stationary</label>
+        <input name="stationary" type="number">
+    </div>
+
+    <div>
+        <label>PhonePe</label>
+        <input name="phonepay" type="number">
+    </div>
+
+    <div>
+        <label>Credit Card</label>
+        <input name="credit" type="number">
+    </div>
+
+    <div>
+        <label>Freight Charges</label>
+        <input name="freight" type="number">
+    </div>
+
+    <div>
+        <label>Bank Deposit</label>
+        <input name="bank" type="number">
+    </div>
+
+    {% if request.path.endswith('/1') %}
+    <div>
+        <label>Discount</label>
+        <input name="discount" type="number">
+    </div>
+    {% endif %}
+
+    <div>
+        <label>CPP Account</label>
+        <input name="cpp" type="number">
+    </div>
+
+    <div>
+        <label>Company Payments</label>
+        <input name="company_payments" type="number">
+    </div>
+
+    <div>
+        <label>Chappals Repair</label>
+        <input name="chappals_repair" type="number">
+    </div>
+
+</div>
+
+<hr>
+
+<!-- ===================== -->
+<!-- 💰 SPECIAL COMMISSION -->
+<!-- ===================== -->
+<h4>Special Commission</h4>
+
+<div id="rows">
+    <div class="row">
+
+        <select name="salesman_id">
+            <optgroup label="Branch Salesmen">
+                {% for s in branch_salesmen %}
+                <option value="{{s.id}}">{{s.name}}</option>
+                {% endfor %}
+            </optgroup>
+
+            <optgroup label="Other Branch Salesmen">
+                {% for s in other_salesmen %}
+                <option value="{{s.id}}">{{s.name}}</option>
+                {% endfor %}
+            </optgroup>
+        </select>
+
+        <input name="amount" placeholder="Amount">
+
+    </div>
+</div>
+
+<button type="button" onclick="addRow()">+ Add Commission</button>
+
+<hr>
+
+<!-- ===================== -->
+<!-- 🧾 OTHER EXPENSES -->
+<!-- ===================== -->
+<h4>Other Expenses</h4>
+
+<div class="form-grid">
+
+    <div>
+        <label>Taxes Expenses</label>
+        <input name="taxes_expenses" type="number">
+    </div>
+
+    <div>
+        <label>Packing Material</label>
+        <input name="packing_material" type="number">
+    </div>
+
+    <div>
+        <label>Furniture Repair</label>
+        <input name="furniture_repair" type="number">
+    </div>
+
+    <div>
+        <label>Advance Debit (-)</label>
+        <input name="advance_debit" type="number">
+    </div>
+
+    <div>
+        <label>Advance Credit (+)</label>
+        <input name="advance_credit" type="number">
+    </div>
+
+    <div>
+        <label>Publicity Expenses</label>
+        <input name="publicity_expenses" type="number">
+    </div>
+
+    <div>
+        <label>Travel Allowance</label>
+        <input name="travel_allowance" type="number">
+    </div>
+
+    <div>
+        <label>Anniversary Expenses</label>
+        <input name="anniversary_expenses" type="number">
+    </div>
+
+</div>
+
+<hr>
+
+<!-- ===================== -->
+<!-- 📅 MONTHLY -->
+<!-- ===================== -->
+<h4>Monthly</h4>
+
+<div class="form-grid">
+
+    <div>
+        <label>Rent</label>
+        <input name="rent" type="number">
+    </div>
+
+    <div>
+        <label>Electricity</label>
+        <input name="electricity" type="number">
+    </div>
+
+    <div>
+        <label>Net Bills</label>
+        <input name="net_bills" type="number">
+    </div>
+
+</div>
+
+<!-- ===================== -->
+<!-- 👨‍💼 SALARIES -->
+<!-- ===================== -->
+<h4>Salesman Salaries</h4>
+
+<div id="salary_rows">
+    <div class="salary_row">
+
+        <select name="salary_salesman_id">
+            {% for s in branch_salesmen %}
+            <option value="{{s.id}}">{{s.name}}</option>
+            {% endfor %}
+        </select>
+
+        <input name="salary_amount" placeholder="Salary">
+
+    </div>
+</div>
+
+<button type="button" onclick="addSalaryRow()">+ Add Salary</button>
+
+<br><br>
+
+<button type="submit">Submit</button>
+
+</form>
+</div>

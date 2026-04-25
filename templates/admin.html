@@ -1,0 +1,229 @@
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<div class="container">
+
+    <!-- 🔷 Header -->
+    <div class="header">
+        <h1>Admin Dashboard</h1>
+    </div>
+
+    <div class="cash-dashboard">
+
+        <h2>Available Cash</h2>
+
+        <div class="cash-grid">
+
+            {% for b in branch_cash_list %}
+            <div class="cash-card">
+                <h4>{{b.name}}</h4>
+                <p>₹ {{b.cash}}</p>
+            </div>
+            {% endfor %}
+
+        </div>
+
+        <div class="cash-total">
+            Total Cash: ₹ {{total_cash}}
+        </div>
+
+    </div>
+
+<h2>Admin Report</h2>
+
+
+<!-- 🔍 Filters -->
+<form method="post" class="filter-box card">
+
+    <label>Branch</label>
+    <select name="branch_id">
+        <option value="all">All Branches</option>
+        {% for b in branches %}
+        <option value="{{b.id}}">{{b.name}}</option>
+        {% endfor %}
+    </select>
+
+    <label>From</label>
+    <input type="date" name="from_date" required>
+
+    <label>To</label>
+    <input type="date" name="to_date" required>
+
+    <label>Report Type</label>
+    <select name="report_type">
+        <option value="summary">Summary</option>
+        <option value="monthly">Monthly</option>
+        <option value="commission">Commission</option>
+        <option value="salary">Salary</option>
+    </select>
+
+    <button type="submit">Get Report</button>
+
+</form>
+
+<hr>
+
+<!-- ========================= -->
+<!-- 📊 SUMMARY REPORT -->
+<!-- ========================= -->
+{% if report_type == "summary" %}
+
+<div class="card">
+    <h3>Report Summary</h3>
+
+    <!-- 💰 INCOME -->
+    <div class="summary-section">
+        <h4>Income</h4>
+        <div class="summary-grid">
+            <div>Total Sales <span>₹ {{total_sales}}</span></div>
+            <div>Advance Credit (+) <span>₹ {{total_adv_credit}}</span></div>
+        </div>
+    </div>
+
+    <!-- 💸 CASH FLOW -->
+    <div class="summary-section">
+        <h4>Online Cash</h4>
+        <div class="summary-grid">
+            <div>PhonePe <span>₹ {{total_phonepay}}</span></div>
+            <div>Credit Card <span>₹ {{total_credit}}</span></div>
+        </div>
+    </div>
+
+    <div class="summary-section">
+        <h4>Cash To HeadOffice</h4>
+        <div class="summary-grid">
+            <div>Bank Deposit <span>₹ {{total_bank}}</span></div>
+            <div>CPP Account <span>₹ {{total_cpp}}</span></div>
+        </div>
+    </div>
+
+    <!-- 🧾 DAILY EXPENSES -->
+    <div class="summary-section">
+        <h4>Daily Expenses</h4>
+        <div class="summary-grid">
+            <div>General Expenses <span>₹ {{total_expenses}}</span></div>
+            <div>Stationary Charges<span>₹ {{total_stationary}}</span></div>
+            <div>Freight Charges<span>₹ {{total_freight}}</span></div>
+            <div>Discount <span>₹ {{total_discount}}</span></div>
+            <div>Special Commission <span>₹ {{total_commission}}</span></div>
+            <div>Company Payments <span>₹ {{total_company}}</span></div>
+            <div>Chappals Repair <span>₹ {{total_chappals}}</span></div>
+            <div>Travel Allowance Charges<span>₹ {{total_travel}}</span></div>
+        </div>
+    </div>
+
+    <!-- 🏢 BUSINESS EXPENSES -->
+    <div class="summary-section">
+        <h4>Business Expenses</h4>
+        <div class="summary-grid">
+            <div>Taxes <span>₹ {{total_taxes}}</span></div>
+            <div>Packing Charges<span>₹ {{total_packing}}</span></div>
+            <div>Furniture Charges<span>₹ {{total_furniture}}</span></div>
+            <div>Publicity Charges<span>₹ {{total_publicity}}</span></div>
+            <div>Anniversary Celebration Charges<span>₹ {{total_anniversary}}</span></div>
+        </div>
+    </div>
+
+    <!-- 📅 MONTHLY EXPENSES -->
+    <div class="summary-section">
+        <h4>Monthly Expenses</h4>
+        <div class="summary-grid">
+            <div>Rent <span>₹ {{total_rent}}</span></div>
+            <div>Electricity Bill<span>₹ {{total_electricity}}</span></div>
+            <div>Salaries <span>₹ {{total_salary}}</span></div>
+            <div>InterNet Bills <span>₹ {{total_net_bills}}</span></div>
+        </div>
+    </div>
+
+    <!-- 💳 OTHER -->
+    <div class="summary-section">
+        <h4>Other Adjustments</h4>
+        <div class="summary-grid">
+            <div>Advance Debit (-) <span>₹ {{total_adv_debit}}</span></div>
+        </div>
+    </div>
+
+</div>
+
+<hr>
+
+
+{% endif %}
+
+
+<!-- ========================= -->
+<!-- 📅 MONTHLY REPORT -->
+<!-- ========================= -->
+{% if report_type == "monthly" %}
+
+<div class="card">
+    <h3>Monthly Reports</h3>
+
+    <div class="summary-grid">
+        <div>Rent <span>₹ {{monthly_rent}}</span></div>
+        <div>Electricity <span>₹ {{monthly_electricity}}</span></div>
+        <div>Salaries <span>₹ {{monthly_salary}}</span></div>
+        <div>Net Bills <span>₹ {{monthly_net_bills}}</span></div>
+    </div>
+</div>
+
+{% endif %}
+
+
+<!-- ========================= -->
+<!-- 💰 COMMISSION REPORT -->
+<!-- ========================= -->
+{% if report_type == "commission" %}
+
+
+<div class="card">
+<h3>Salesman Commission Report</h3>
+
+<table class="styled-table">
+<tr>
+<th>Salesman</th>
+<th>Total Commission</th>
+</tr>
+
+{% for name, amount in commission_report.items() %}
+<tr>
+<td>{{name}}</td>
+<td>{{amount}}</td>
+</tr>
+{% endfor %}
+</table>
+</div>
+{% endif %}
+
+
+<!-- ========================= -->
+<!-- 🧾 SALARY REPORT -->
+<!-- ========================= -->
+{% if report_type == "salary" %}
+
+<div class="card">
+<h3>Salesman Salary Report</h3>
+
+<table class="styled-table">
+<tr>
+<th>Salesman</th>
+<th>Salary</th>
+<th>Commission</th>
+<th>Total</th>
+</tr>
+
+{% for name, data in salary_report.items() %}
+<tr>
+<td>{{name}}</td>
+<td>{{data.salary}}</td>
+<td>{{data.commission}}</td>
+<td>{{data.total}}</td>
+</tr>
+{% endfor %}
+</table>
+</div>
+
+{% endif %}
+
+</div>

@@ -1,0 +1,36 @@
+/* 🌐 BASE RESET */
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f4f4;
+    margin: 0;
+}
+
+/* 📦 COMMON CONTAINER (SAFE BASE ONLY) */
+.container {
+    margin: auto;
+    padding: 20px;
+}
+
+/* 📋 BASIC TABLE (FALLBACK ONLY) */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table th,
+table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+table th {
+    background: #4f46e5;
+    color: white;
+}
+
+/* 💰 FINAL BALANCE */
+.final-balance {
+    color: green;
+    font-size: 20px;
+    font-weight: bold;
+}

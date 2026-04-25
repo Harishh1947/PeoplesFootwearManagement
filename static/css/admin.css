@@ -1,0 +1,246 @@
+/* 🌐 GLOBAL */
+body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: #f4f6fb;
+    margin: 0;
+    color: #1f2937;
+}
+
+/* 📦 CONTAINER */
+.container {
+    max-width: 1200px;
+    margin: auto;
+    padding: 20px;
+}
+
+/* 🔷 HEADER */
+.header h1 {
+    font-size: 26px;
+    margin-bottom: 20px;
+}
+
+/* 🧾 CARD */
+.card {
+    background: #fff;
+    padding: 18px;
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+    margin-bottom: 20px;
+}
+
+/* ============================= */
+/* 💰 CASH DASHBOARD */
+/* ============================= */
+
+.cash-dashboard {
+    background: linear-gradient(135deg, #4f46e5, #06b6d4);
+    color: white;
+    padding: 18px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.cash-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+.cash-card {
+    background: rgba(255,255,255,0.15);
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.cash-card h4 {
+    font-size: 13px;
+    margin: 0;
+}
+
+.cash-card p {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.cash-total {
+    margin-top: 10px;
+    text-align: right;
+    font-weight: bold;
+}
+
+/* ============================= */
+/* 🔍 FILTER FORM (FIXED ISSUE) */
+/* ============================= */
+
+.filter-box {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: end;
+}
+
+.filter-box > div {
+    display: flex;
+    flex-direction: column;
+    min-width: 180px;
+}
+
+.filter-box label {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.filter-box input,
+.filter-box select {
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+}
+
+.filter-box button {
+    height: 36px;
+    padding: 0 16px;
+    background: #4f46e5;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+/* ============================= */
+/* ============================= */
+/* 📊 SUMMARY / MONTHLY BIG VIEW */
+/* ============================= */
+
+.summary-section {
+    margin-top: 25px;
+}
+
+.summary-section h4 {
+    margin-bottom: 12px;
+    font-size: 18px;
+    color: #1f2937;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.summary-grid div {
+    background: #ffffff;
+    padding: 16px 18px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    font-size: 16px;
+    font-weight: 500;
+
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.summary-grid span {
+    font-size: 18px;
+    font-weight: bold;
+    color: #111827;
+}
+
+.summary-grid div span {
+    color: #16a34a; /* green */
+}
+
+.summary-section:nth-child(3) span {
+    color: #dc2626; /* red for expenses */
+}
+
+.summary-section:nth-child(4) span {
+    color: #dc2626; /* red for expenses */
+}
+
+.summary-section:nth-child(5) span {
+    color: #dc2626; /* red for expenses */
+}
+
+.summary-section:nth-child(6) span {
+    color: #dc2626; /* red for expenses */
+}
+
+.summary-section:nth-child(7) span {
+    color: #dc2626; /* red for expenses */
+}
+
+.summary-section:nth-child(8) span {
+    color: #dc2626; /* red for expenses */
+}
+
+/* RESPONSIVE */
+@media (max-width: 1024px) {
+    .summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .summary-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ============================= */
+/* 📋 TABLE */
+/* ============================= */
+
+.styled-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.styled-table th {
+    background: #4f46e5;
+    color: white;
+    padding: 10px;
+    text-align: left;
+}
+
+.styled-table td {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+}
+
+.styled-table tr:hover {
+    background: #f3f4f6;
+}
+
+/* ============================= */
+/* 📱 RESPONSIVE */
+/* ============================= */
+
+@media (max-width: 1024px) {
+    .cash-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .cash-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .summary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .cash-total {
+        text-align: center;
+    }
+}
