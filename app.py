@@ -1,8 +1,10 @@
 from flask import Flask, render_template, request, redirect
 from supabase import create_client
 
-url = "https://qkrjrhvhvvawhmvivxgv.supabase.co"
-key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFrcmpyaHZodnZhd2htdml2eGd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NjQ4MjIsImV4cCI6MjA5MjU0MDgyMn0.2qJMd6T1MuWvxHg8cKnAUrr-GdnUwL9h1hTPaaIw_EY"
+import os
+
+url = os.getenv("SUPABASE_URL")
+key = os.getenv("SUPABASE_KEY")
 
 supabase = create_client(url, key)
 
