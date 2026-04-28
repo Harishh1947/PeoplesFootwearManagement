@@ -2,7 +2,14 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+
+
 <div class="container">
+
+    <div class="top-bar">
+    <h2>Dashboard</h2>
+    <a href="/logout" class="logout-btn">Logout</a>
+    </div>
 
     <!-- 🔷 Header -->
     <div class="header">
@@ -227,5 +234,3 @@
 {% endif %}
 
 </div>
-
-<a href="/logout">Logout</a>
