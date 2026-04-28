@@ -2,12 +2,11 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/manager.css') }}">
 <script src="/static/script.js"></script>
 
-<div class="top-bar">
+<div class="container">
+    <div class="top-bar">
     <h2>Dashboard</h2>
     <a href="/logout" class="logout-btn">Logout</a>
-</div>
-
-<div class="container">
+    </div>
 
 <h3>Opening Balance: ₹ {{ opening }}</h3>
 
