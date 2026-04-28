@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, session, url_for
 from supabase import create_client
 from dotenv import load_dotenv
 import os
@@ -13,7 +13,7 @@ if not url or not key:
     raise Exception("Missing Supabase credentials")
 
 app = Flask(__name__)
-
+app.secret_key = "change_this_to_random_secret_123"
 # 🔐 Users
 users = {
     "admin": {"password": "admin123", "role": "admin"},
@@ -53,29 +53,53 @@ def login():
         p = request.form["password"]
 
         if u in users and users[u]["password"] == p:
+
+            # ✅ store session
+            session["user"] = u
+            session["role"] = users[u]["role"]
+
             if users[u]["role"] == "admin":
                 return redirect("/admin")
             else:
-                return redirect(f"/manager/{users[u]['branch_id']}")
+                session["branch_id"] = users[u]["branch_id"]
+                return redirect("/manager")
 
     return render_template("login.html")
 
+
 # 📝 Manager
-@app.route("/manager/<int:branch_id>", methods=["GET", "POST"])
-def manager(branch_id):
+@app.route("/manager", methods=["GET", "POST"])
+def manager():
+
+    # 🔒 login check
+    if "user" not in session:
+        return redirect("/")
+
+    if session.get("role") != "manager":
+        return "❌ Unauthorized"
+
+    branch_id = session.get("branch_id")
+
     opening = get_opening(branch_id)
 
-    # Branch salesmen
     branch_salesmen = supabase.table("salesman")\
         .select("id,name")\
         .eq("branch_id", branch_id)\
         .execute().data
 
-    # Other branch salesmen
     other_salesmen = supabase.table("salesman")\
         .select("id,name")\
         .neq("branch_id", branch_id)\
         .execute().data
+
+    # keep your existing POST logic SAME (no change)
+
+    return render_template(
+        "manager.html",
+        opening=opening,
+        branch_salesmen=branch_salesmen,
+        other_salesmen=other_salesmen
+    )
 
     if request.method == "POST":
         data = request.form
@@ -493,5 +517,9 @@ def admin():
             branch_cash_list=branch_cash_list,
             total_cash=total_cash
         )
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect("/")
     
 app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
