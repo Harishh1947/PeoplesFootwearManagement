@@ -194,6 +194,22 @@
 <!-- ===================== -->
 <!-- 👨‍💼 SALARIES -->
 <!-- ===================== -->
+<h4>Sales Commission </h4>
+
+<div id="sales_comm_rows">
+    <div class="salary_row">
+        <select name="sales_comm_salesman_id">
+            {% for s in branch_salesmen %}
+            <option value="{{s.id}}">{{s.name}}</option>
+            {% endfor %}
+        </select>
+
+        <input name="sales_comm_amount" placeholder="Sales Commission">
+    </div>
+</div>
+
+<button type="button" onclick="addSalesCommRow()">+ Add Sales Commission</button>
+    
 <h4>Salesman Salaries</h4>
 
 <div id="salary_rows">
