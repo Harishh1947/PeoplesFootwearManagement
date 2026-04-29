@@ -252,15 +252,22 @@ def manager():
 @app.route("/admin", methods=["GET", "POST"])
 def admin():
 
+    # 🔒 security
     if "user" not in session:
         return redirect("/")
 
     if session.get("role") != "admin":
         return "❌ Unauthorized"
 
+    from_date = request.form.get("from_date")
+    to_date = request.form.get("to_date")
+    branch_id = request.form.get("branch_id")
+    report_type = request.form.get("report_type")
+
+    # branches
     branches = supabase.table("branch").select("id,name").execute().data
 
-    # 💰 cash
+    # 💰 Available Cash
     branch_cash_list = []
     total_cash = 0
 
@@ -280,25 +287,47 @@ def admin():
             "cash": cash
         })
 
-    # 🆕 sales commission report (always available)
-    sales_comm_data = supabase.table("salesman_sales_commission")\
-        .select("amount, salesman(name)")\
-        .execute().data
+    # =========================
+    # 🆕 SALES COMMISSION REPORT
+    # =========================
+    if report_type == "sales_commission":
 
-    sales_comm_report = {}
-    for row in sales_comm_data:
-        name = row["salesman"]["name"]
-        sales_comm_report[name] = sales_comm_report.get(name, 0) + row["amount"]
+        sales_comm_data = supabase.table("salesman_sales_commission")\
+            .select("amount, salesman_id")\
+            .execute().data
 
+        sales_comm_report = {}
+
+        for row in sales_comm_data:
+            sid = row["salesman_id"]
+
+            res = supabase.table("salesman")\
+                .select("name")\
+                .eq("id", sid)\
+                .execute()
+
+            name = res.data[0]["name"] if res.data else "Unknown"
+
+            sales_comm_report[name] = sales_comm_report.get(name, 0) + row["amount"]
+
+        return render_template(
+            "admin.html",
+            report_type=report_type,
+            branches=branches,
+            sales_comm_report=sales_comm_report,
+            branch_cash_list=branch_cash_list,
+            total_cash=total_cash
+        )
+
+    # =========================
+    # DEFAULT LOAD
+    # =========================
     return render_template(
         "admin.html",
+        report_type=None,
         branches=branches,
         branch_cash_list=branch_cash_list,
         total_cash=total_cash,
-        sales_comm_report=sales_comm_report
+        sales_comm_report={}
     )
-
-
-# 🚀 Run
-# app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
-app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=True)
+app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
