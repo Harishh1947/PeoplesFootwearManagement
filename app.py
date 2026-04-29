@@ -360,6 +360,32 @@ def admin():
             monthly_salary += r.get("salaries", 0)
             monthly_net_bills += r.get("net_bills", 0)
 
+
+            sales_comm_total = 0
+
+            sales_data = supabase.table("salesman_sales_commission")\
+                .select("amount, month, year")\
+                .execute().data
+            
+            if from_date and to_date:
+                from_year, from_month = map(int, from_date.split("-")[:2])
+                to_year, to_month = map(int, to_date.split("-")[:2])
+            
+                for row in sales_data:
+                    y = row["year"]
+                    m = row["month"]
+            
+                    if (y > from_year or (y == from_year and m >= from_month)) and \
+                       (y < to_year or (y == to_year and m <= to_month)):
+            
+                        sales_comm_total += row.get("amount", 0)
+            
+            else:
+                # if no filter → include all
+                for row in sales_data:
+                    sales_comm_total += row.get("amount", 0)
+        
+
         return render_template(
             "admin.html",
             report_type=report_type,
@@ -393,7 +419,8 @@ def admin():
             monthly_salary=monthly_salary,
             monthly_net_bills=monthly_net_bills,
             branch_cash_list=branch_cash_list,
-            total_cash=total_cash
+            total_cash=total_cash,
+            sales_comm_total=sales_comm_total
         )
 
     # =========================
