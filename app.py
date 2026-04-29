@@ -153,6 +153,15 @@ def manager():
         for amt in salary_amounts:
             if amt and amt.strip():
                 salary_total += float(amt)
+        # 🆕 SALES COMMISSION (MONTHLY)
+        sales_comm_ids = request.form.getlist("sales_comm_salesman_id")
+        sales_comm_amounts = request.form.getlist("sales_comm_amount")
+        
+        sales_comm_total = 0
+        
+        for amt in sales_comm_amounts:
+            if amt and amt.strip():
+                sales_comm_total += float(amt)
 
         commission_total = 0
 
@@ -178,6 +187,7 @@ def manager():
             - rent
             - electricity
             - salary_total
+            - sales_comm_total
             - commission_total
             - company
             - taxes
@@ -227,6 +237,16 @@ def manager():
         # 💰 Salary Insert (Monthly)
         salary_ids = request.form.getlist("salary_salesman_id")
         salary_amounts = request.form.getlist("salary_amount")
+        # 🆕 Insert Sales Commission
+        for sid, amt in zip(sales_comm_ids, sales_comm_amounts):
+            if amt and amt.strip():
+                supabase.table("salesman_sales_commission").insert({
+                    "salesman_id": int(sid),
+                    "branch_id": branch_id,
+                    "month": month,
+                    "year": year,
+                    "amount": float(amt)
+                }).execute()
 
         month = int(date.split("-")[1])
         year = int(date.split("-")[0])
