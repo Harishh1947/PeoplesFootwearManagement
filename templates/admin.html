@@ -234,3 +234,19 @@
 {% endif %}
 
 </div>
+
+<h3>Sales Commission Report (Monthly)</h3>
+
+<table>
+<tr>
+<th>Salesman</th>
+<th>Sales Commission</th>
+</tr>
+
+{% for name, amount in sales_comm_report.items() %}
+<tr>
+<td>{{name}}</td>
+<td>{{amount}}</td>
+</tr>
+{% endfor %}
+</table>
