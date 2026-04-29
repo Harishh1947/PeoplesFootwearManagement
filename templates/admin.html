@@ -61,7 +61,8 @@
     <select name="report_type">
         <option value="summary">Summary</option>
         <option value="monthly">Monthly</option>
-        <option value="commission">Commission</option>
+        <option value="commission">Special Commission</option>
+        <option value="sales_commission">Sales Commission</option>
         <option value="salary">Salary</option>
     </select>
 
@@ -204,6 +205,31 @@
 {% endif %}
 
 
+{% if report_type == "sales_commission" %}
+
+<div class="card">
+<h3>Sales Commission Report (Monthly)</h3>
+
+<table class="styled-table">
+<tr>
+<th>Salesman</th>
+<th>Sales Commission</th>
+</tr>
+
+{% for name, amount in sales_comm_report.items() %}
+<tr>
+<td>{{name}}</td>
+<td>{{amount}}</td>
+</tr>
+{% endfor %}
+
+</table>
+</div>
+
+{% endif %}
+    
+
+
 <!-- ========================= -->
 <!-- 🧾 SALARY REPORT -->
 <!-- ========================= -->
@@ -235,18 +261,3 @@
 
 </div>
 
-<h3>Sales Commission Report (Monthly)</h3>
-
-<table>
-<tr>
-<th>Salesman</th>
-<th>Sales Commission</th>
-</tr>
-
-{% for name, amount in sales_comm_report.items() %}
-<tr>
-<td>{{name}}</td>
-<td>{{amount}}</td>
-</tr>
-{% endfor %}
-</table>
