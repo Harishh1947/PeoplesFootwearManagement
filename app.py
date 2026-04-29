@@ -536,7 +536,18 @@ def admin():
             salary_report=final_salary_report,
             branch_cash_list=branch_cash_list,
             total_cash=total_cash
+            sales_comm_report=sales_comm_report
         )
+
+        sales_comm_data = supabase.table("salesman_sales_commission")\
+            .select("amount, salesman(name)")\
+            .execute().data
+        
+        sales_comm_report = {}
+        
+        for row in sales_comm_data:
+            name = row["salesman"]["name"]
+            sales_comm_report[name] = sales_comm_report.get(name, 0) + row["amount"]
 @app.route("/logout")
 def logout():
     session.clear()
