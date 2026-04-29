@@ -287,6 +287,7 @@ def manager():
 # 📊 Admin
 @app.route("/admin", methods=["GET", "POST"])
 def admin():
+    sales_comm_report = {}
     from_date = request.form.get("from_date")
     to_date = request.form.get("to_date")
     branch_id = request.form.get("branch_id")
@@ -528,7 +529,15 @@ def admin():
                 "commission": com,
                 "total": sal + com
             }
-
+        sales_comm_data = supabase.table("salesman_sales_commission")\
+            .select("amount, salesman(name)")\
+            .execute().data
+        
+        sales_comm_report = {}
+        
+        for row in sales_comm_data:
+            name = row["salesman"]["name"]
+            sales_comm_report[name] = sales_comm_report.get(name, 0) + row["amount"]
         return render_template(
             "admin.html",
             report_type=report_type,
