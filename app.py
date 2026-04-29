@@ -535,7 +535,7 @@ def admin():
             branches=branches,
             salary_report=final_salary_report,
             branch_cash_list=branch_cash_list,
-            total_cash=total_cash
+            total_cash=total_cash,
             sales_comm_report=sales_comm_report
         )
 
