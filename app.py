@@ -252,7 +252,7 @@ def manager():
 @app.route("/admin", methods=["GET", "POST"])
 def admin():
 
-    # 🔒 security
+    # 🔒 Security
     if "user" not in session:
         return redirect("/")
 
@@ -264,10 +264,10 @@ def admin():
     branch_id = request.form.get("branch_id")
     report_type = request.form.get("report_type")
 
-    # branches
+    # Branches
     branches = supabase.table("branch").select("id,name").execute().data
 
-    # 💰 Available Cash
+    # 💰 Cash
     branch_cash_list = []
     total_cash = 0
 
@@ -280,17 +280,126 @@ def admin():
             .execute()
 
         cash = res.data[0]["closing_balance"] if res.data else 0
-        total_cash += cash
 
         branch_cash_list.append({
             "name": b["name"],
             "cash": cash
         })
 
+        total_cash += cash
+
     # =========================
-    # 🆕 SALES COMMISSION REPORT
+    # DEFAULT LOAD
     # =========================
-    if report_type == "sales_commission":
+    if request.method == "GET":
+        return render_template(
+            "admin.html",
+            report_type=None,
+            branches=branches,
+            branch_cash_list=branch_cash_list,
+            total_cash=total_cash
+        )
+
+    # =========================
+    # SUMMARY / MONTHLY
+    # =========================
+    if report_type in ["summary", "monthly"]:
+
+        query = supabase.table("daily_entry").select("*")
+
+        if from_date and to_date:
+            query = query.gte("entry_date", from_date).lte("entry_date", to_date)
+
+        if branch_id and branch_id != "all":
+            query = query.eq("branch_id", int(branch_id))
+
+        data = query.execute().data
+
+        total_sales = total_expenses = total_stationary = 0
+        total_phonepay = total_credit = total_freight = 0
+        total_bank = total_cpp = total_discount = 0
+        total_rent = total_electricity = total_salary = 0
+        total_commission = 0
+
+        total_company = total_taxes = total_chappals = 0
+        total_packing = total_furniture = total_net_bills = 0
+        total_adv_debit = total_adv_credit = 0
+        total_publicity = total_travel = total_anniversary = 0
+
+        monthly_rent = monthly_electricity = monthly_salary = monthly_net_bills = 0
+
+        for r in data:
+            total_sales += r.get("daily_sale", 0)
+            total_expenses += r.get("daily_expenses", 0)
+            total_stationary += r.get("stationary_expenses", 0)
+            total_phonepay += r.get("phonepay", 0)
+            total_credit += r.get("credit_card", 0)
+            total_freight += r.get("freight_charges", 0)
+            total_bank += r.get("bank_deposit", 0)
+            total_cpp += r.get("cpp_account", 0)
+            total_discount += r.get("discount", 0)
+            total_rent += r.get("rent", 0)
+            total_electricity += r.get("electricity_bill", 0)
+            total_salary += r.get("salaries", 0)
+            total_commission += r.get("commission_total", 0)
+
+            total_company += r.get("company_payments", 0)
+            total_taxes += r.get("taxes_expenses", 0)
+            total_chappals += r.get("chappals_repair", 0)
+            total_packing += r.get("packing_material", 0)
+            total_furniture += r.get("furniture_repair", 0)
+            total_net_bills += r.get("net_bills", 0)
+            total_adv_debit += r.get("advance_debit", 0)
+            total_adv_credit += r.get("advance_credit", 0)
+            total_publicity += r.get("publicity_expenses", 0)
+            total_travel += r.get("travel_allowance", 0)
+            total_anniversary += r.get("anniversary_expenses", 0)
+
+            monthly_rent += r.get("rent", 0)
+            monthly_electricity += r.get("electricity_bill", 0)
+            monthly_salary += r.get("salaries", 0)
+            monthly_net_bills += r.get("net_bills", 0)
+
+        return render_template(
+            "admin.html",
+            report_type=report_type,
+            branches=branches,
+            total_sales=total_sales,
+            total_expenses=total_expenses,
+            total_stationary=total_stationary,
+            total_phonepay=total_phonepay,
+            total_credit=total_credit,
+            total_freight=total_freight,
+            total_bank=total_bank,
+            total_cpp=total_cpp,
+            total_discount=total_discount,
+            total_rent=total_rent,
+            total_electricity=total_electricity,
+            total_salary=total_salary,
+            total_commission=total_commission,
+            total_company=total_company,
+            total_taxes=total_taxes,
+            total_chappals=total_chappals,
+            total_packing=total_packing,
+            total_furniture=total_furniture,
+            total_net_bills=total_net_bills,
+            total_adv_debit=total_adv_debit,
+            total_adv_credit=total_adv_credit,
+            total_publicity=total_publicity,
+            total_travel=total_travel,
+            total_anniversary=total_anniversary,
+            monthly_rent=monthly_rent,
+            monthly_electricity=monthly_electricity,
+            monthly_salary=monthly_salary,
+            monthly_net_bills=monthly_net_bills,
+            branch_cash_list=branch_cash_list,
+            total_cash=total_cash
+        )
+
+    # =========================
+    # SALES COMMISSION
+    # =========================
+    elif report_type == "sales_commission":
 
         sales_comm_data = supabase.table("salesman_sales_commission")\
             .select("amount, salesman_id")\
@@ -317,17 +426,118 @@ def admin():
             sales_comm_report=sales_comm_report,
             branch_cash_list=branch_cash_list,
             total_cash=total_cash
-        )
+            )
+    elif report_type == "commission":
 
-    # =========================
-    # DEFAULT LOAD
-    # =========================
+    query = supabase.table("special_commission")\
+        .select("amount, salesman_id")\
+        .execute().data
+
+    commission_report = {}
+
+    for row in query:
+        sid = row["salesman_id"]
+
+        res = supabase.table("salesman")\
+            .select("name")\
+            .eq("id", sid)\
+            .execute()
+
+        name = res.data[0]["name"] if res.data else "Unknown"
+
+        commission_report[name] = commission_report.get(name, 0) + row["amount"]
+
     return render_template(
         "admin.html",
-        report_type=None,
+        report_type=report_type,
         branches=branches,
+        commission_report=commission_report,
         branch_cash_list=branch_cash_list,
-        total_cash=total_cash,
-        sales_comm_report={}
+        total_cash=total_cash
     )
+    elif report_type == "salary":
+
+    salary_map = {}
+    special_map = {}
+    sales_map = {}
+
+    # 🔹 Salary
+    salary_data = supabase.table("salesman_salary")\
+        .select("salary, salesman_id")\
+        .execute().data
+
+    for row in salary_data:
+        sid = row["salesman_id"]
+
+        res = supabase.table("salesman")\
+            .select("name")\
+            .eq("id", sid)\
+            .execute()
+
+        name = res.data[0]["name"] if res.data else "Unknown"
+
+        salary_map[name] = salary_map.get(name, 0) + row["salary"]
+
+    # 🔹 Special Commission
+    special_data = supabase.table("special_commission")\
+        .select("amount, salesman_id")\
+        .execute().data
+
+    for row in special_data:
+        sid = row["salesman_id"]
+
+        res = supabase.table("salesman")\
+            .select("name")\
+            .eq("id", sid)\
+            .execute()
+
+        name = res.data[0]["name"] if res.data else "Unknown"
+
+        special_map[name] = special_map.get(name, 0) + row["amount"]
+
+    # 🔹 Sales Commission
+    sales_data = supabase.table("salesman_sales_commission")\
+        .select("amount, salesman_id")\
+        .execute().data
+
+    for row in sales_data:
+        sid = row["salesman_id"]
+
+        res = supabase.table("salesman")\
+            .select("name")\
+            .eq("id", sid)\
+            .execute()
+
+        name = res.data[0]["name"] if res.data else "Unknown"
+
+        sales_map[name] = sales_map.get(name, 0) + row["amount"]
+
+    # 🔹 Combine
+    final_salary_report = {}
+
+    all_names = set(list(salary_map.keys()) + list(special_map.keys()) + list(sales_map.keys()))
+
+    for name in all_names:
+        sal = salary_map.get(name, 0)
+        sp = special_map.get(name, 0)
+        sc = sales_map.get(name, 0)
+
+        total = sal + sp + sc
+
+        final_salary_report[name] = {
+            "salary": sal,
+            "commission": sp,
+            "sales_commission": sc,
+            "total": total
+        }
+
+    return render_template(
+        "admin.html",
+        report_type=report_type,
+        branches=branches,
+        salary_report=final_salary_report,
+        branch_cash_list=branch_cash_list,
+        total_cash=total_cash
+    )
+    
 app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
