@@ -46,3 +46,17 @@ function addSalaryRow() {
 
     container.appendChild(clone);
 }
+
+function addSalesCommRow() {
+    let div = document.createElement("div");
+    div.className = "salary_row";
+
+    div.innerHTML = `
+        <select name="sales_comm_salesman_id">
+            ${document.querySelector('[name="salary_salesman_id"]').innerHTML}
+        </select>
+        <input name="sales_comm_amount" placeholder="Sales Commission">
+    `;
+
+    document.getElementById("sales_comm_rows").appendChild(div);
+}
