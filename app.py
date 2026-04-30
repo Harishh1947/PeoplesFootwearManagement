@@ -233,8 +233,7 @@ def manager():
                 supabase.table("salesman_sales_commission").insert({
                     "salesman_id": int(sid),
                     "branch_id": branch_id,
-                    "month": month,
-                    "year": year,
+                    "entry_datetime": datetime.now(),
                     "amount": float(amt)
                 }).execute()
 
@@ -430,6 +429,8 @@ def admin():
 
         sales_comm_data = supabase.table("salesman_sales_commission")\
             .select("amount, salesman_id")\
+            .gte("entry_datetime", from_date + " 00:00:00")\
+            .lte("entry_datetime", to_date + " 23:59:59")\
             .execute().data
 
         sales_comm_report = {}
