@@ -228,12 +228,14 @@ def manager():
                 }).execute()
 
         # 🆕 sales commission insert
+        from datetime import datetime
         for sid, amt in zip(sales_comm_ids, sales_comm_amounts):
             if amt:
+                now = datetime.now()
                 supabase.table("salesman_sales_commission").insert({
                     "salesman_id": int(sid),
                     "branch_id": branch_id,
-                    "entry_datetime": datetime.now(),
+                    "entry_datetime": now,
                     "amount": float(amt)
                 }).execute()
 
@@ -363,21 +365,15 @@ def admin():
             sales_comm_total = 0
 
             sales_data = supabase.table("salesman_sales_commission")\
-                .select("amount, month, year")\
+                .select("amount")\
+                .gte("entry_datetime", from_date + " 00:00:00")\
+                .lte("entry_datetime", to_date + " 23:59:59")\
                 .execute().data
             
-            if from_date and to_date:
-                from_year, from_month = map(int, from_date.split("-")[:2])
-                to_year, to_month = map(int, to_date.split("-")[:2])
+            sales_comm_total = 0
             
-                for row in sales_data:
-                    y = row["year"]
-                    m = row["month"]
-            
-                    if (y > from_year or (y == from_year and m >= from_month)) and \
-                       (y < to_year or (y == to_year and m <= to_month)):
-            
-                        sales_comm_total += row.get("amount", 0)
+            for row in sales_data:
+                sales_comm_total += row.get("amount", 0)
             
             else:
                 # if no filter → include all
@@ -489,7 +485,7 @@ def admin():
         special_map = {}
         sales_map = {}
     
-        # 🔹 Salary
+        # 🔹 Salary (CORRECT TABLE)
         salary_data = supabase.table("salesman_salary")\
             .select("salary, salesman_id")\
             .execute().data
@@ -506,9 +502,11 @@ def admin():
     
             salary_map[name] = salary_map.get(name, 0) + row["salary"]
     
-        # 🔹 Special Commission
+        # 🔹 Special Commission (ADD DATE FILTER)
         special_data = supabase.table("special_commission")\
             .select("amount, salesman_id")\
+            .gte("daily_entry.entry_date", from_date)\
+            .lte("daily_entry.entry_date", to_date)\
             .execute().data
     
         for row in special_data:
@@ -523,9 +521,11 @@ def admin():
     
             special_map[name] = special_map.get(name, 0) + row["amount"]
     
-        # 🔹 Sales Commission
+        # 🔹 Sales Commission (WITH TIMESTAMP FILTER)
         sales_data = supabase.table("salesman_sales_commission")\
             .select("amount, salesman_id")\
+            .gte("entry_datetime", from_date + " 00:00:00")\
+            .lte("entry_datetime", to_date + " 23:59:59")\
             .execute().data
     
         for row in sales_data:
@@ -540,7 +540,7 @@ def admin():
     
             sales_map[name] = sales_map.get(name, 0) + row["amount"]
     
-        # 🔹 Combine
+        # 🔹 Combine all
         final_salary_report = {}
     
         all_names = set(list(salary_map.keys()) + list(special_map.keys()) + list(sales_map.keys()))
