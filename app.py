@@ -490,7 +490,7 @@ def admin():
         special_map = {}
         sales_map = {}
     
-        # 🔹 Salary (CORRECT TABLE)
+        # 🔹 Salary
         salary_data = supabase.table("salesman_salary")\
             .select("salary, salesman_id")\
             .execute().data
@@ -504,14 +504,11 @@ def admin():
                 .execute()
     
             name = res.data[0]["name"] if res.data else "Unknown"
-    
             salary_map[name] = salary_map.get(name, 0) + row["salary"]
     
-        # 🔹 Special Commission (ADD DATE FILTER)
+        # 🔹 Special Commission (FIXED - removed invalid filter)
         special_data = supabase.table("special_commission")\
             .select("amount, salesman_id")\
-            .gte("daily_entry.entry_date", from_date)\
-            .lte("daily_entry.entry_date", to_date)\
             .execute().data
     
         for row in special_data:
@@ -523,15 +520,19 @@ def admin():
                 .execute()
     
             name = res.data[0]["name"] if res.data else "Unknown"
-    
             special_map[name] = special_map.get(name, 0) + row["amount"]
     
-        # 🔹 Sales Commission (WITH TIMESTAMP FILTER)
-        sales_data = supabase.table("salesman_sales_commission")\
-            .select("amount, salesman_id")\
-            .gte("entry_datetime", from_date + " 00:00:00")\
-            .lte("entry_datetime", to_date + " 23:59:59")\
-            .execute().data
+        # 🔹 Sales Commission (FIXED safe date)
+        if from_date and to_date:
+            sales_data = supabase.table("salesman_sales_commission")\
+                .select("amount, salesman_id")\
+                .gte("entry_datetime", from_date + " 00:00:00")\
+                .lte("entry_datetime", to_date + " 23:59:59")\
+                .execute().data
+        else:
+            sales_data = supabase.table("salesman_sales_commission")\
+                .select("amount, salesman_id")\
+                .execute().data
     
         for row in sales_data:
             sid = row["salesman_id"]
@@ -542,10 +543,9 @@ def admin():
                 .execute()
     
             name = res.data[0]["name"] if res.data else "Unknown"
-    
             sales_map[name] = sales_map.get(name, 0) + row["amount"]
     
-        # 🔹 Combine all
+        # 🔹 Combine
         final_salary_report = {}
     
         all_names = set(list(salary_map.keys()) + list(special_map.keys()) + list(sales_map.keys()))
