@@ -245,3 +245,12 @@ h3 {
 .logout-btn:hover {
     background: #dc2626;
 }
+
+.success-msg {
+    background: #d1fae5;
+    color: #065f46;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
