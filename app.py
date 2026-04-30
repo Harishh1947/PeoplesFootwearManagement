@@ -336,6 +336,24 @@ def admin():
 
         monthly_rent = monthly_electricity = monthly_salary = monthly_net_bills = 0
 
+        # ✅ FIX 1: move outside loop
+        sales_comm_total = 0
+
+        # ✅ FIX 2: safe date usage
+        if from_date and to_date:
+            sales_data = supabase.table("salesman_sales_commission")\
+                .select("amount")\
+                .gte("entry_datetime", from_date + " 00:00:00")\
+                .lte("entry_datetime", to_date + " 23:59:59")\
+                .execute().data
+        else:
+            sales_data = supabase.table("salesman_sales_commission")\
+                .select("amount")\
+                .execute().data
+
+        for row in sales_data:
+            sales_comm_total += row.get("amount", 0)
+
         for r in data:
             total_sales += r.get("daily_sale", 0)
             total_expenses += r.get("daily_expenses", 0)
@@ -367,24 +385,6 @@ def admin():
             monthly_electricity += r.get("electricity_bill", 0)
             monthly_salary += r.get("salaries", 0)
             monthly_net_bills += r.get("net_bills", 0)
-
-
-            sales_comm_total = 0
-
-            if from_date and to_date:
-                sales_data = supabase.table("salesman_sales_commission")\
-                    .select("amount")\
-                    .gte("entry_datetime", from_date + " 00:00:00")\
-                    .lte("entry_datetime", to_date + " 23:59:59")\
-                    .execute().data
-            else:
-                sales_data = supabase.table("salesman_sales_commission")\
-                    .select("amount")\
-                    .execute().data
-            
-            for row in sales_data:
-                sales_comm_total += row.get("amount", 0)
-        
 
         return render_template(
             "admin.html",
