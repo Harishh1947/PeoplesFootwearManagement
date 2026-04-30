@@ -237,7 +237,7 @@ def manager():
                 supabase.table("salesman_sales_commission").insert({
                     "salesman_id": int(sid),
                     "branch_id": branch_id,
-                    "entry_datetime": datetime.now(),
+                    "entry_datetime": datetime.now().isoformat(),
                     "amount": float(amt)
                 }).execute()
 
