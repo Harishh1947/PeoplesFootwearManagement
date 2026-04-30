@@ -81,6 +81,7 @@ def logout():
 @app.route("/manager", methods=["GET", "POST"])
 def manager():
 
+    # 🔒 auth check
     if "user" not in session:
         return redirect("/")
 
@@ -100,6 +101,9 @@ def manager():
         .neq("branch_id", branch_id)\
         .execute().data
 
+    # =========================
+    # POST
+    # =========================
     if request.method == "POST":
 
         data = request.form
@@ -113,7 +117,8 @@ def manager():
             .execute()
 
         if existing.data:
-            return "❌ Entry already exists!"
+            session["msg"] = "❌ Entry already exists!"
+            return redirect("/manager")
 
         # values
         sale = to_float(data.get("sale"))
@@ -142,26 +147,23 @@ def manager():
         # salary
         salary_ids = request.form.getlist("salary_salesman_id")
         salary_amounts = request.form.getlist("salary_amount")
-
         salary_total = sum([to_float(x) for x in salary_amounts])
 
         # special commission
         ids = request.form.getlist("salesman_id")
         amts = request.form.getlist("amount")
-
         commission_total = sum([to_float(x) for x in amts])
 
         # 🆕 sales commission
         sales_comm_ids = request.form.getlist("sales_comm_salesman_id")
         sales_comm_amounts = request.form.getlist("sales_comm_amount")
-
         sales_comm_total = sum([to_float(x) for x in sales_comm_amounts])
 
         # date split
         month = int(date.split("-")[1])
         year = int(date.split("-")[0])
 
-        # closing balance
+        # closing
         closing = (
             opening + sale + adv_credit
             - phonepay - credit - expenses - stationary
@@ -175,6 +177,7 @@ def manager():
             - adv_debit - publicity - travel - anniversary
         )
 
+        # 🔹 daily entry
         entry = supabase.table("daily_entry").insert({
             "branch_id": branch_id,
             "entry_date": date,
@@ -207,7 +210,7 @@ def manager():
 
         entry_id = entry.data[0]["id"]
 
-        # salary insert
+        # 🔹 salary insert
         for sid, amt in zip(salary_ids, salary_amounts):
             if amt:
                 supabase.table("salesman_salary").insert({
@@ -218,7 +221,7 @@ def manager():
                     "salary": float(amt)
                 }).execute()
 
-        # special commission insert
+        # 🔹 special commission
         for sid, amt in zip(ids, amts):
             if amt:
                 supabase.table("special_commission").insert({
@@ -227,22 +230,30 @@ def manager():
                     "amount": float(amt)
                 }).execute()
 
-        # 🆕 sales commission insert
+        # 🔹 sales commission
         from datetime import datetime
         for sid, amt in zip(sales_comm_ids, sales_comm_amounts):
             if amt:
-                now = datetime.now()
                 supabase.table("salesman_sales_commission").insert({
                     "salesman_id": int(sid),
                     "branch_id": branch_id,
-                    "entry_datetime": now,
+                    "entry_datetime": datetime.now(),
                     "amount": float(amt)
                 }).execute()
 
-    
+        # ✅ success message + redirect
+        session["msg"] = "✅ Saved Successfully!"
+        return redirect("/manager")
 
-    session["msg"] = "✅ Saved Successfully!"
-    return redirect("/manager")
+    # =========================
+    # GET
+    # =========================
+    return render_template(
+        "manager.html",
+        opening=opening,
+        branch_salesmen=branch_salesmen,
+        other_salesmen=other_salesmen
+    )
 
 
 # 📊 Admin
