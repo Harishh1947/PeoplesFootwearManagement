@@ -239,13 +239,14 @@ def manager():
                     "amount": float(amt)
                 }).execute()
 
-        return "✅ Saved Successfully!"
+    
 
     return render_template(
         "manager.html",
         opening=opening,
         branch_salesmen=branch_salesmen,
-        other_salesmen=other_salesmen
+        other_salesmen=other_salesmen,
+        message="✅ Saved Successfully!"
     )
 
 
