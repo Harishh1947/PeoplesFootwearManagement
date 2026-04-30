@@ -423,48 +423,70 @@ def admin():
             sales_comm_total=sales_comm_total
         )
 
-    # =========================
-    # SALES COMMISSION
-    # =========================
-    elif report_type == "sales_commission":
+# =========================
+# SALES COMMISSION
+# =========================
+elif report_type == "sales_commission":
 
-        sales_comm_data = supabase.table("salesman_sales_commission")\
-            .select("amount, salesman_id")\
-            .gte("entry_datetime", from_date + " 00:00:00")\
-            .lte("entry_datetime", to_date + " 23:59:59")\
-            .execute().data
+    query = supabase.table("salesman_sales_commission")\
+        .select("amount, salesman_id")
 
-        sales_comm_report = {}
+    # ✅ FIX 1: safe date filter
+    if from_date and to_date:
+        query = query.gte("entry_datetime", from_date + " 00:00:00")\
+                     .lte("entry_datetime", to_date + " 23:59:59")
 
-        for row in sales_comm_data:
-            sid = row["salesman_id"]
+    # ✅ FIX 2: branch filter
+    if branch_id and branch_id != "all":
+        query = query.eq("branch_id", int(branch_id))
 
-            res = supabase.table("salesman")\
-                .select("name")\
-                .eq("id", sid)\
-                .execute()
+    sales_comm_data = query.execute().data
 
-            name = res.data[0]["name"] if res.data else "Unknown"
+    sales_comm_report = {}
 
-            sales_comm_report[name] = sales_comm_report.get(name, 0) + row["amount"]
+    for row in sales_comm_data:
+        sid = row["salesman_id"]
 
-        return render_template(
-            "admin.html",
-            report_type=report_type,
-            branches=branches,
-            sales_comm_report=sales_comm_report,
-            branch_cash_list=branch_cash_list,
-            total_cash=total_cash
-            )
+        res = supabase.table("salesman")\
+            .select("name")\
+            .eq("id", sid)\
+            .execute()
+
+        name = res.data[0]["name"] if res.data else "Unknown"
+
+        sales_comm_report[name] = sales_comm_report.get(name, 0) + row["amount"]
+
+    return render_template(
+        "admin.html",
+        report_type=report_type,
+        branches=branches,
+        sales_comm_report=sales_comm_report,
+        branch_cash_list=branch_cash_list,
+        total_cash=total_cash
+    )
     elif report_type == "commission":
 
         query = supabase.table("special_commission")\
-            .select("amount, salesman_id")\
-            .execute().data
+            .select("amount, salesman_id")
+    
+        # ✅ safe date (only if available)
+        if from_date and to_date:
+            query = query.gte("created_at", from_date + " 00:00:00")\
+                         .lte("created_at", to_date + " 23:59:59")
+    
+        # ⚠️ NOTE: special_commission table may NOT have branch_id
+        # so branch filter only if column exists
+        if branch_id and branch_id != "all":
+            try:
+                query = query.eq("branch_id", int(branch_id))
+            except:
+                pass
+    
+        data = query.execute().data
     
         commission_report = {}
     
-        for row in query:
+        for row in data:
             sid = row["salesman_id"]
     
             res = supabase.table("salesman")\
@@ -490,10 +512,14 @@ def admin():
         special_map = {}
         sales_map = {}
     
-        # 🔹 Salary
-        salary_data = supabase.table("salesman_salary")\
-            .select("salary, salesman_id")\
-            .execute().data
+        # 🔹 Salary (WITH branch filter)
+        salary_query = supabase.table("salesman_salary")\
+            .select("salary, salesman_id")
+    
+        if branch_id and branch_id != "all":
+            salary_query = salary_query.eq("branch_id", int(branch_id))
+    
+        salary_data = salary_query.execute().data
     
         for row in salary_data:
             sid = row["salesman_id"]
@@ -506,10 +532,17 @@ def admin():
             name = res.data[0]["name"] if res.data else "Unknown"
             salary_map[name] = salary_map.get(name, 0) + row["salary"]
     
-        # 🔹 Special Commission (FIXED - removed invalid filter)
-        special_data = supabase.table("special_commission")\
-            .select("amount, salesman_id")\
-            .execute().data
+        # 🔹 Special Commission (⚠️ only if branch_id column exists)
+        special_query = supabase.table("special_commission")\
+            .select("amount, salesman_id")
+    
+        if branch_id and branch_id != "all":
+            try:
+                special_query = special_query.eq("branch_id", int(branch_id))
+            except:
+                pass
+    
+        special_data = special_query.execute().data
     
         for row in special_data:
             sid = row["salesman_id"]
@@ -522,17 +555,18 @@ def admin():
             name = res.data[0]["name"] if res.data else "Unknown"
             special_map[name] = special_map.get(name, 0) + row["amount"]
     
-        # 🔹 Sales Commission (FIXED safe date)
+        # 🔹 Sales Commission (WITH branch + date filter)
+        sales_query = supabase.table("salesman_sales_commission")\
+            .select("amount, salesman_id")
+    
+        if branch_id and branch_id != "all":
+            sales_query = sales_query.eq("branch_id", int(branch_id))
+    
         if from_date and to_date:
-            sales_data = supabase.table("salesman_sales_commission")\
-                .select("amount, salesman_id")\
-                .gte("entry_datetime", from_date + " 00:00:00")\
-                .lte("entry_datetime", to_date + " 23:59:59")\
-                .execute().data
-        else:
-            sales_data = supabase.table("salesman_sales_commission")\
-                .select("amount, salesman_id")\
-                .execute().data
+            sales_query = sales_query.gte("entry_datetime", from_date + " 00:00:00")\
+                                     .lte("entry_datetime", to_date + " 23:59:59")
+    
+        sales_data = sales_query.execute().data
     
         for row in sales_data:
             sid = row["salesman_id"]
@@ -548,7 +582,11 @@ def admin():
         # 🔹 Combine
         final_salary_report = {}
     
-        all_names = set(list(salary_map.keys()) + list(special_map.keys()) + list(sales_map.keys()))
+        all_names = set(
+            list(salary_map.keys()) +
+            list(special_map.keys()) +
+            list(sales_map.keys())
+        )
     
         for name in all_names:
             sal = salary_map.get(name, 0)
@@ -571,6 +609,6 @@ def admin():
             salary_report=final_salary_report,
             branch_cash_list=branch_cash_list,
             total_cash=total_cash
-        )
+            )
     
 app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
