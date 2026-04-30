@@ -241,13 +241,8 @@ def manager():
 
     
 
-    return render_template(
-        "manager.html",
-        opening=opening,
-        branch_salesmen=branch_salesmen,
-        other_salesmen=other_salesmen,
-        message="✅ Saved Successfully!"
-    )
+    session["msg"] = "✅ Saved Successfully!"
+    return redirect("/manager")
 
 
 # 📊 Admin
@@ -365,21 +360,19 @@ def admin():
 
             sales_comm_total = 0
 
-            sales_data = supabase.table("salesman_sales_commission")\
-                .select("amount")\
-                .gte("entry_datetime", from_date + " 00:00:00")\
-                .lte("entry_datetime", to_date + " 23:59:59")\
-                .execute().data
-            
-            sales_comm_total = 0
+            if from_date and to_date:
+                sales_data = supabase.table("salesman_sales_commission")\
+                    .select("amount")\
+                    .gte("entry_datetime", from_date + " 00:00:00")\
+                    .lte("entry_datetime", to_date + " 23:59:59")\
+                    .execute().data
+            else:
+                sales_data = supabase.table("salesman_sales_commission")\
+                    .select("amount")\
+                    .execute().data
             
             for row in sales_data:
                 sales_comm_total += row.get("amount", 0)
-            
-            else:
-                # if no filter → include all
-                for row in sales_data:
-                    sales_comm_total += row.get("amount", 0)
         
 
         return render_template(
