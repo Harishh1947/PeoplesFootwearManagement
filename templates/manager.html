@@ -2,6 +2,13 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/manager.css') }}">
 <script src="/static/script.js"></script>
 
+{% if session.get("msg") %}
+<div class="success-msg">
+    {{ session.get("msg") }}
+</div>
+{% set _ = session.pop("msg", None) %}
+{% endif %}
+
 <div class="container">
     <div class="top-bar">
     <h2>Dashboard</h2>
