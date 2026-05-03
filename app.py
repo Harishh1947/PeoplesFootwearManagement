@@ -490,14 +490,24 @@ def admin():
     
         for row in data:
             sid = row["salesman_id"]
-    
+        
             res = supabase.table("salesman")\
-                .select("name")\
+                .select("name, branch_id")\
                 .eq("id", sid)\
                 .execute()
-    
-            name = res.data[0]["name"] if res.data else "Unknown"
-    
+        
+            if not res.data:
+                continue
+        
+            salesman = res.data[0]
+        
+            # ✅ APPLY BRANCH FILTER HERE
+            if branch_id and branch_id != "all":
+                if salesman["branch_id"] != int(branch_id):
+                    continue
+        
+            name = salesman["name"]
+        
             commission_report[name] = commission_report.get(name, 0) + row["amount"]
     
         return render_template(
@@ -548,13 +558,24 @@ def admin():
     
         for row in special_data:
             sid = row["salesman_id"]
-    
+        
             res = supabase.table("salesman")\
-                .select("name")\
+                .select("name, branch_id")\
                 .eq("id", sid)\
                 .execute()
-    
-            name = res.data[0]["name"] if res.data else "Unknown"
+        
+            if not res.data:
+                continue
+        
+            salesman = res.data[0]
+        
+            # ✅ APPLY BRANCH FILTER HERE
+            if branch_id and branch_id != "all":
+                if salesman["branch_id"] != int(branch_id):
+                    continue
+        
+            name = salesman["name"]
+        
             special_map[name] = special_map.get(name, 0) + row["amount"]
     
         # 🔹 Sales Commission (WITH branch + date filter)
