@@ -413,7 +413,9 @@ def admin():
 
         # ✅ FINAL SALARY FIX
         total_salary = total_salary + special_total + sales_comm_total
-
+        print("DEBUG → total_salary:", total_salary)
+        print("DEBUG → special_total:", special_total)
+        print("DEBUG → sales_comm_total:", sales_comm_total)
         return render_template(
             "admin.html",
             report_type=report_type,
