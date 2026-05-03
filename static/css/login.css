@@ -8,17 +8,23 @@ body {
     justify-content: center;
     align-items: center;
 
-    min-height: 100vh; /* FIXED */
+    min-height: 100vh;
+    padding: 20px; /* ✅ prevents edge sticking on mobile */
+    box-sizing: border-box;
 }
 
 /* 📦 LOGIN CARD */
 .login-container {
     background: white;
     padding: 35px 30px;
-    border-radius: 12px;
-    width: 320px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    border-radius: 14px;
+    width: 100%;
+    max-width: 360px; /* ✅ better scaling */
+
+    box-shadow: 0 12px 35px rgba(0,0,0,0.15);
     text-align: center;
+
+    transition: 0.3s;
 }
 
 /* 🏷 TITLE */
@@ -26,18 +32,19 @@ body {
     margin-bottom: 20px;
     color: #1f2937;
     font-weight: 600;
+    font-size: 22px;
 }
 
 /* 🔲 INPUTS */
 .login-container input {
     width: 100%;
-    padding: 10px 12px;
-    margin: 8px 0;
-    border-radius: 6px;
+    padding: 11px 12px;
+    margin: 10px 0;
+    border-radius: 8px;
     border: 1px solid #ddd;
     background: #f9fafb;
     font-size: 14px;
-    transition: 0.2s;
+    transition: 0.25s;
 }
 
 /* FOCUS */
@@ -51,25 +58,53 @@ body {
 /* 🔘 BUTTON */
 .login-container button {
     width: 100%;
-    padding: 10px;
-    margin-top: 12px;
+    padding: 11px;
+    margin-top: 14px;
     background: #4f46e5;
     color: white;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
-    font-size: 14px;
-    transition: 0.2s;
+    font-size: 15px;
+    font-weight: 500;
+    transition: 0.25s;
 }
 
 .login-container button:hover {
     background: #4338ca;
 }
 
-/* 📱 MOBILE */
-@media (max-width: 400px) {
+/* 📱 MOBILE (small phones) */
+@media (max-width: 480px) {
+    body {
+        align-items: flex-start; /* ✅ avoids keyboard overlap */
+        padding-top: 40px;
+    }
+
     .login-container {
-        width: 90%;
         padding: 25px 20px;
+        border-radius: 12px;
+    }
+
+    .login-container h2 {
+        font-size: 20px;
+    }
+}
+
+/* 📱 VERY SMALL DEVICES */
+@media (max-width: 320px) {
+    .login-container {
+        padding: 20px 15px;
+    }
+
+    .login-container input {
+        font-size: 13px;
+    }
+}
+
+/* 💻 LARGE SCREENS (optional polish) */
+@media (min-width: 1200px) {
+    .login-container {
+        transform: scale(1.05); /* slight upscale */
     }
 }
