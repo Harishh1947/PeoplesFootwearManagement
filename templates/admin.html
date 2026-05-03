@@ -45,29 +45,31 @@
 
     <label>Branch</label>
     <select name="branch_id">
-        <option value="all">All Branches</option>
+        <option value="all" {% if selected_branch == "all" %}selected{% endif %}>All Branches</option>
         {% for b in branches %}
-        <option value="{{b.id}}">{{b.name}}</option>
+        <option value="{{b.id}}"
+            {% if selected_branch == b.id|string %}selected{% endif %}>
+            {{b.name}}
+        </option>
         {% endfor %}
     </select>
 
     <label>From</label>
-    <input type="date" name="from_date" required>
+    <input type="date" name="from_date" value="{{ from_date }}" required>
 
     <label>To</label>
-    <input type="date" name="to_date" required>
+    <input type="date" name="to_date" value="{{ to_date }}" required>
 
     <label>Report Type</label>
     <select name="report_type">
-        <option value="summary">Summary</option>
-        <option value="monthly">Monthly</option>
-        <option value="commission">Special Commission</option>
-        <option value="sales_commission">Sales Commission</option>
-        <option value="salary">Salary</option>
+        <option value="summary" {% if report_type == "summary" %}selected{% endif %}>Summary</option>
+        <option value="monthly" {% if report_type == "monthly" %}selected{% endif %}>Monthly</option>
+        <option value="commission" {% if report_type == "commission" %}selected{% endif %}>Special Commission</option>
+        <option value="sales_commission" {% if report_type == "sales_commission" %}selected{% endif %}>Sales Commission</option>
+        <option value="salary" {% if report_type == "salary" %}selected{% endif %}>Salary</option>
     </select>
 
     <button type="submit">Get Report</button>
-
 </form>
 
 <hr>
