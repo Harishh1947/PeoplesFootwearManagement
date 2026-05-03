@@ -125,75 +125,16 @@ hr {
 /* ============================= */
 
 @media (max-width: 768px) {
-
-    body {
-        padding: 10px;
-    }
-
-    .container {
-        width: 100%;
-    }
-
-    form {
-        padding: 20px 15px;
-        border-radius: 12px;
-    }
-
-    /* 📊 STACK EVERYTHING */
     .form-grid {
         grid-template-columns: 1fr;
-        gap: 16px;
     }
 
     .full-width {
         grid-column: span 1;
     }
 
-    /* 🧾 INPUTS BIGGER */
-    input, select {
-        padding: 14px;
-        font-size: 16px;
-    }
-
-    /* 🏷 LABEL BIGGER */
-    label {
-        font-size: 15px;
-    }
-
-    /* 🔘 BUTTON FULL WIDTH */
-    button {
-        width: 100%;
-        padding: 14px;
-        font-size: 16px;
-    }
-
-    /* 🧮 ROWS (salary / commission) */
     .row, .salary_row {
         grid-template-columns: 1fr;
-        gap: 12px;
-    }
-
-    /* 📏 HEADINGS */
-    h3 {
-        font-size: 20px;
-        padding: 12px;
-    }
-
-    h4 {
-        font-size: 17px;
-    }
-
-    /* 🔝 TOP BAR STACK */
-    .top-bar {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-    }
-
-    .logout-btn {
-        width: 100%;
-        text-align: center;
-        padding: 12px;
     }
 }
 
