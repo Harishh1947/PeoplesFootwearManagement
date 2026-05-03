@@ -471,18 +471,14 @@ def admin():
         query = supabase.table("special_commission")\
             .select("amount, salesman_id")
     
-        # ✅ safe date (only if available)
+        # ✅ Date filter
         if from_date and to_date:
             query = query.gte("created_at", from_date + " 00:00:00")\
                          .lte("created_at", to_date + " 23:59:59")
     
-        # ⚠️ NOTE: special_commission table may NOT have branch_id
-        # so branch filter only if column exists
+        # ✅ Branch filter (NOW VALID because column exists)
         if branch_id and branch_id != "all":
-            try:
-                query = query.eq("branch_id", int(branch_id))
-            except:
-                pass
+            query = query.eq("branch_id", int(branch_id))
     
         data = query.execute().data
     
@@ -490,24 +486,14 @@ def admin():
     
         for row in data:
             sid = row["salesman_id"]
-        
+    
             res = supabase.table("salesman")\
-                .select("name, branch_id")\
+                .select("name")\
                 .eq("id", sid)\
                 .execute()
-        
-            if not res.data:
-                continue
-        
-            salesman = res.data[0]
-        
-            # ✅ APPLY BRANCH FILTER HERE
-            if branch_id and branch_id != "all":
-                if salesman["branch_id"] != int(branch_id):
-                    continue
-        
-            name = salesman["name"]
-        
+    
+            name = res.data[0]["name"] if res.data else "Unknown"
+    
             commission_report[name] = commission_report.get(name, 0) + row["amount"]
     
         return render_template(
@@ -518,18 +504,24 @@ def admin():
             branch_cash_list=branch_cash_list,
             total_cash=total_cash
         )
+
+    
     elif report_type == "salary":
 
         salary_map = {}
         special_map = {}
         sales_map = {}
     
-        # 🔹 Salary (WITH branch filter)
+        # 🔹 Salary (WITH branch + date filter)
         salary_query = supabase.table("salesman_salary")\
             .select("salary, salesman_id")
     
         if branch_id and branch_id != "all":
             salary_query = salary_query.eq("branch_id", int(branch_id))
+    
+        if from_date and to_date:
+            salary_query = salary_query.gte("created_at", from_date + " 00:00:00")\
+                                       .lte("created_at", to_date + " 23:59:59")
     
         salary_data = salary_query.execute().data
     
@@ -542,40 +534,32 @@ def admin():
                 .execute()
     
             name = res.data[0]["name"] if res.data else "Unknown"
+    
             salary_map[name] = salary_map.get(name, 0) + row["salary"]
     
-        # 🔹 Special Commission (⚠️ only if branch_id column exists)
+        # 🔹 Special Commission (WITH branch + date filter)
         special_query = supabase.table("special_commission")\
             .select("amount, salesman_id")
     
         if branch_id and branch_id != "all":
-            try:
-                special_query = special_query.eq("branch_id", int(branch_id))
-            except:
-                pass
+            special_query = special_query.eq("branch_id", int(branch_id))
+    
+        if from_date and to_date:
+            special_query = special_query.gte("created_at", from_date + " 00:00:00")\
+                                         .lte("created_at", to_date + " 23:59:59")
     
         special_data = special_query.execute().data
     
         for row in special_data:
             sid = row["salesman_id"]
-        
+    
             res = supabase.table("salesman")\
-                .select("name, branch_id")\
+                .select("name")\
                 .eq("id", sid)\
                 .execute()
-        
-            if not res.data:
-                continue
-        
-            salesman = res.data[0]
-        
-            # ✅ APPLY BRANCH FILTER HERE
-            if branch_id and branch_id != "all":
-                if salesman["branch_id"] != int(branch_id):
-                    continue
-        
-            name = salesman["name"]
-        
+    
+            name = res.data[0]["name"] if res.data else "Unknown"
+    
             special_map[name] = special_map.get(name, 0) + row["amount"]
     
         # 🔹 Sales Commission (WITH branch + date filter)
@@ -600,16 +584,15 @@ def admin():
                 .execute()
     
             name = res.data[0]["name"] if res.data else "Unknown"
+    
             sales_map[name] = sales_map.get(name, 0) + row["amount"]
     
         # 🔹 Combine
         final_salary_report = {}
     
-        all_names = set(
-            list(salary_map.keys()) +
-            list(special_map.keys()) +
-            list(sales_map.keys())
-        )
+        all_names = set(list(salary_map.keys()) +
+                        list(special_map.keys()) +
+                        list(sales_map.keys()))
     
         for name in all_names:
             sal = salary_map.get(name, 0)
@@ -632,6 +615,6 @@ def admin():
             salary_report=final_salary_report,
             branch_cash_list=branch_cash_list,
             total_cash=total_cash
-            )
+        )
     
 app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
