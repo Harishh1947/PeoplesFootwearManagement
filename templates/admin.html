@@ -241,6 +241,7 @@
 <div class="card">
 <h3>Salesman Salary Report</h3>
 
+<div class="table-wrapper">    
 <table class="styled-table">
 <tr>
 <th>Salesman</th>
@@ -252,14 +253,15 @@
 
 {% for name, data in salary_report.items() %}
 <tr>
-<td>{{name}}</td>
-<td>{{data.salary}}</td>
-<td>{{data.commission}}</td>
-<td>{{data.sales_commission}}</td>
-<td>{{data.total}}</td>
+<td data-label="Salesman">{{name}}</td>
+<td data-label="Salary">{{data.salary}}</td>
+<td data-label="Special Commission">{{data.commission}}</td>
+<td data-label="Sales Commission">{{data.sales_commission}}</td>
+<td data-label="Total">{{data.total}}</td>
 </tr>
 {% endfor %}
 </table>
+</div>
 </div>
 
 {% endif %}
