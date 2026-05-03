@@ -307,7 +307,10 @@ def admin():
             report_type=None,
             branches=branches,
             branch_cash_list=branch_cash_list,
-            total_cash=total_cash
+            total_cash=total_cash,
+            from_date=from_date,
+            to_date=to_date,
+            selected_branch=branch_id
         )
 
     # =========================
@@ -422,7 +425,10 @@ def admin():
             monthly_net_bills=monthly_net_bills,
             branch_cash_list=branch_cash_list,
             total_cash=total_cash,
-            sales_comm_total=sales_comm_total
+            sales_comm_total=sales_comm_total,
+            from_date=from_date,
+            to_date=to_date,
+            selected_branch=branch_id
         )
 
     # =========================
@@ -464,7 +470,10 @@ def admin():
             branches=branches,
             sales_comm_report=sales_comm_report,
             branch_cash_list=branch_cash_list,
-            total_cash=total_cash
+            total_cash=total_cash,
+            from_date=from_date,
+            to_date=to_date,
+            selected_branch=branch_id
         )
     elif report_type == "commission":
 
@@ -502,7 +511,10 @@ def admin():
             branches=branches,
             commission_report=commission_report,
             branch_cash_list=branch_cash_list,
-            total_cash=total_cash
+            total_cash=total_cash,
+            from_date=from_date,
+            to_date=to_date,
+            selected_branch=branch_id
         )
 
     
@@ -614,7 +626,10 @@ def admin():
             branches=branches,
             salary_report=final_salary_report,
             branch_cash_list=branch_cash_list,
-            total_cash=total_cash
+            total_cash=total_cash,
+            from_date=from_date,
+            to_date=to_date,
+            selected_branch=branch_id
         )
     
 app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
