@@ -358,6 +358,25 @@ def admin():
 
         for row in sales_data:
             sales_comm_total += row.get("amount", 0)
+        # 🔹 Special Commission total
+        special_total = 0
+        
+        special_query = supabase.table("special_commission")\
+            .select("amount")
+        
+        if from_date and to_date:
+            special_query = special_query.gte("created_at", from_date + " 00:00:00")\
+                                         .lte("created_at", to_date + " 23:59:59")
+        
+        if branch_id and branch_id != "all":
+            special_query = special_query.eq("branch_id", int(branch_id))
+        
+        special_data = special_query.execute().data
+        
+        for row in special_data:
+            special_total += row.get("amount", 0)
+
+
 
         for r in data:
             total_sales += r.get("daily_sale", 0)
@@ -390,6 +409,10 @@ def admin():
             monthly_electricity += r.get("electricity_bill", 0)
             monthly_salary += r.get("salaries", 0)
             monthly_net_bills += r.get("net_bills", 0)
+
+
+        # ✅ FINAL SALARY FIX
+        total_salary = total_salary + special_total + sales_comm_total
 
         return render_template(
             "admin.html",
