@@ -267,3 +267,59 @@ body {
 .logout-btn:hover {
     background: #dc2626;
 }
+
+/* ============================= */
+/* 📱 RESPONSIVE TABLE FIX */
+/* ============================= */
+
+.table-wrapper {
+    overflow-x: auto;
+    width: 100%;
+}
+
+/* Improve table readability */
+.styled-table th,
+.styled-table td {
+    white-space: nowrap;
+}
+
+/* ============================= */
+/* 📱 MOBILE CARD VIEW (OPTIONAL) */
+/* ============================= */
+
+@media (max-width: 600px) {
+
+    .styled-table thead {
+        display: none;
+    }
+
+    .styled-table, 
+    .styled-table tbody, 
+    .styled-table tr, 
+    .styled-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .styled-table tr {
+        margin-bottom: 15px;
+        background: #fff;
+        border-radius: 10px;
+        padding: 10px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    .styled-table td {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border: none;
+        font-size: 14px;
+    }
+
+    .styled-table td::before {
+        content: attr(data-label);
+        font-weight: bold;
+        color: #6b7280;
+    }
+}
