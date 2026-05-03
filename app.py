@@ -2,6 +2,8 @@ from flask import Flask, render_template, request, redirect, session
 from supabase import create_client
 from dotenv import load_dotenv
 import os
+from datetime import datetime
+
 
 load_dotenv()
 
@@ -423,47 +425,47 @@ def admin():
             sales_comm_total=sales_comm_total
         )
 
-# =========================
-# SALES COMMISSION
-# =========================
-elif report_type == "sales_commission":
-
-    query = supabase.table("salesman_sales_commission")\
-        .select("amount, salesman_id")
-
-    # ✅ FIX 1: safe date filter
-    if from_date and to_date:
-        query = query.gte("entry_datetime", from_date + " 00:00:00")\
-                     .lte("entry_datetime", to_date + " 23:59:59")
-
-    # ✅ FIX 2: branch filter
-    if branch_id and branch_id != "all":
-        query = query.eq("branch_id", int(branch_id))
-
-    sales_comm_data = query.execute().data
-
-    sales_comm_report = {}
-
-    for row in sales_comm_data:
-        sid = row["salesman_id"]
-
-        res = supabase.table("salesman")\
-            .select("name")\
-            .eq("id", sid)\
-            .execute()
-
-        name = res.data[0]["name"] if res.data else "Unknown"
-
-        sales_comm_report[name] = sales_comm_report.get(name, 0) + row["amount"]
-
-    return render_template(
-        "admin.html",
-        report_type=report_type,
-        branches=branches,
-        sales_comm_report=sales_comm_report,
-        branch_cash_list=branch_cash_list,
-        total_cash=total_cash
-    )
+    # =========================
+    # SALES COMMISSION
+    # =========================
+    elif report_type == "sales_commission":
+    
+        query = supabase.table("salesman_sales_commission")\
+            .select("amount, salesman_id")
+    
+        # ✅ FIX 1: safe date filter
+        if from_date and to_date:
+            query = query.gte("entry_datetime", from_date + " 00:00:00")\
+                         .lte("entry_datetime", to_date + " 23:59:59")
+    
+        # ✅ FIX 2: branch filter
+        if branch_id and branch_id != "all":
+            query = query.eq("branch_id", int(branch_id))
+    
+        sales_comm_data = query.execute().data
+    
+        sales_comm_report = {}
+    
+        for row in sales_comm_data:
+            sid = row["salesman_id"]
+    
+            res = supabase.table("salesman")\
+                .select("name")\
+                .eq("id", sid)\
+                .execute()
+    
+            name = res.data[0]["name"] if res.data else "Unknown"
+    
+            sales_comm_report[name] = sales_comm_report.get(name, 0) + row["amount"]
+    
+        return render_template(
+            "admin.html",
+            report_type=report_type,
+            branches=branches,
+            sales_comm_report=sales_comm_report,
+            branch_cash_list=branch_cash_list,
+            total_cash=total_cash
+        )
     elif report_type == "commission":
 
         query = supabase.table("special_commission")\
