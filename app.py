@@ -229,6 +229,7 @@ def manager():
                 supabase.table("special_commission").insert({
                     "daily_entry_id": entry_id,
                     "salesman_id": int(sid),
+                    "branch_id": branch_id,
                     "amount": float(amt)
                 }).execute()
 
