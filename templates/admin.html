@@ -60,6 +60,7 @@
     <label>To</label>
     <input type="date" name="to_date" value="{{ to_date }}" required>
 
+
     <label>Report Type</label>
     <select name="report_type">
         <option value="summary" {% if report_type == "summary" %}selected{% endif %}>Summary</option>
@@ -87,7 +88,6 @@
         <h4>Income</h4>
         <div class="summary-grid">
             <div>Total Sales <span>₹ {{total_sales}}</span></div>
-            <div>Advance Credit (+) <span>₹ {{total_adv_credit}}</span></div>
         </div>
     </div>
 
@@ -141,26 +141,171 @@
         <div class="summary-grid">
             <div>Rent <span>₹ {{total_rent}}</span></div>
             <div>Electricity Bill<span>₹ {{total_electricity}}</span></div>
-            <div>Salaries(base salary + spl commision) <span>₹ {{total_salary}}</span></div>
+            <div>Salary <span>₹ {{base_salary_total}}</span></div>
+            <div>Special Commission <span>₹ {{special_total}}</span></div>
             <div>Sales Commission <span>₹ {{sales_comm_total}}</span></div>
             <div>InterNet Bills <span>₹ {{total_net_bills}}</span></div>
         </div>
     </div>
 
-    <!-- 💳 OTHER -->
-    <div class="summary-section">
-        <h4>Other Adjustments</h4>
-        <div class="summary-grid">
-            <div>Advance Debit (-) <span>₹ {{total_adv_debit}}</span></div>
-        </div>
-    </div>
 
 </div>
 
 <hr>
+{% endif %}
 
+
+
+<!-- ========================= -->
+<!-- 💵 ADVANCES -->
+<!-- ========================= -->
+
+<div class="card">
+
+<h2>Advances</h2>
+
+<form method="post">
+
+    <input type="hidden" name="action" value="advance_report">
+    <input type="hidden" name="branch_id" value="{{selected_branch}}">
+
+    <div class="filter-box">
+
+        <!-- salesman -->
+        <div>
+
+            <label>Salesman</label>
+
+            <select name="advance_salesman_id" required>
+
+                {% for s in salesmen %}
+
+                <option value="{{s.id}}"
+                    {% if selected_salesman == s.id|string %}
+                    selected
+                    {% endif %}
+                >
+                    {{s.name}}
+                </option>
+
+                {% endfor %}
+
+            </select>
+
+        </div>
+
+        <!-- from -->
+        <div>
+
+            <label>From Date</label>
+
+            <input
+                type="date"
+                name="advance_from_date"
+                value="{{advance_from_date}}"
+                required
+            >
+
+        </div>
+
+        <!-- to -->
+        <div>
+
+            <label>To Date</label>
+
+            <input
+                type="date"
+                name="advance_to_date"
+                value="{{advance_to_date}}"
+                required
+            >
+
+        </div>
+
+        <div>
+            <button type="submit">
+                Get Advances
+            </button>
+        </div>
+
+    </div>
+
+</form>
+
+<br>
+
+{% if advance_report or overall_balance != 0 %}
+
+<div class="table-wrapper">
+
+<table class="styled-table">
+
+<tr>
+    <th>Date</th>
+    <th>Type</th>
+    <th>Amount</th>
+</tr>
+
+{% for row in advance_report %}
+
+<tr>
+
+<td>
+    {{row.date}}
+</td>
+
+<td>
+    {{row.type}}
+</td>
+
+<td>
+
+{% if row.type == "debit" %}
+-
+{% else %}
++
+{% endif %}
+
+₹ {{row.amount}}
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+</div>
+
+<br>
+
+<h3>
+
+Overall Balance :
+
+{% if overall_balance < 0 %}
+
+Salesman Should Return
+₹ {{ overall_balance | abs }}
+
+{% elif overall_balance > 0 %}
+
+Company Should Give
+₹ {{ overall_balance }}
+
+{% else %}
+
+Settled
 
 {% endif %}
+
+</h3>
+
+{% endif %}
+
+</div>
+
 
 
 <!-- ========================= -->
@@ -174,8 +319,9 @@
     <div class="summary-grid">
         <div>Rent <span>₹ {{monthly_rent}}</span></div>
         <div>Electricity <span>₹ {{monthly_electricity}}</span></div>
-        <div>Salaries <span>₹ {{total_salary}}</span></div>
+        <div>Salaries(overall) <span>₹ {{total_salary}}</span></div>
         <div>Net Bills <span>₹ {{monthly_net_bills}}</span></div>
+        <div>Sweeper Salary <span>₹ {{monthly_sweeper_salary}}</span></div>
     </div>
 </div>
 
@@ -263,8 +409,8 @@
 </table>
 </div>
 </div>
-
 {% endif %}
+
 
 </div>
 

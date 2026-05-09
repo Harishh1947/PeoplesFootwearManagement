@@ -66,12 +66,11 @@
         <input name="bank" type="number">
     </div>
 
-    {% if request.path.endswith('/1') %}
     <div>
         <label>Discount</label>
         <input name="discount" type="number">
     </div>
-    {% endif %}
+
 
     <div>
         <label>CPP Account</label>
@@ -124,6 +123,58 @@
 <hr>
 
 <!-- ===================== -->
+<!-- 💵 SALESMAN ADVANCES -->
+<!-- ===================== -->
+
+<h4>Salesman Advances</h4>
+
+<div id="advance_rows">
+
+    <div class="salary_row">
+
+        <!-- salesman -->
+        <select name="advance_salesman_id">
+
+            {% for s in branch_salesmen %}
+            <option value="{{s.id}}">
+                {{s.name}}
+            </option>
+            {% endfor %}
+
+        </select>
+
+        <!-- type -->
+        <select name="advance_type">
+
+            <option value="debit">
+                Debit (Money Given)
+            </option>
+
+            <option value="credit">
+                Credit (Money Returned)
+            </option>
+
+        </select>
+
+        <!-- amount -->
+        <input
+            name="advance_amount"
+            placeholder="Amount"
+            type="number"
+        >
+
+    </div>
+
+</div>
+
+<button type="button" onclick="addAdvanceRow()">
+    + Add Advance
+</button>
+
+<hr>
+
+
+<!-- ===================== -->
 <!-- 🧾 OTHER EXPENSES -->
 <!-- ===================== -->
 <h4>Other Expenses</h4>
@@ -145,15 +196,6 @@
         <input name="furniture_repair" type="number">
     </div>
 
-    <div>
-        <label>Advance Debit (-)</label>
-        <input name="advance_debit" type="number">
-    </div>
-
-    <div>
-        <label>Advance Credit (+)</label>
-        <input name="advance_credit" type="number">
-    </div>
 
     <div>
         <label>Publicity Expenses</label>
@@ -234,6 +276,25 @@
 </div>
 
 <button type="button" onclick="addSalaryRow()">+ Add Salary</button>
+
+<br><br>
+
+<hr>
+
+<h4>Sweeper Salary</h4>
+
+<div class="form-grid">
+
+    <div>
+        <label>Sweeper Salary</label>
+        <input
+            name="sweeper_salary"
+            type="number"
+            placeholder="Sweeper Salary"
+        >
+    </div>
+
+</div>
 
 <br><br>
 

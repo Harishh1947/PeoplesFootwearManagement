@@ -26,6 +26,7 @@ users = {
     "b1": {"password": "123", "role": "manager", "branch_id": 1},
     "b2": {"password": "123", "role": "manager", "branch_id": 2},
     "b3": {"password": "123", "role": "manager", "branch_id": 3},
+    "b4": {"password": "123", "role": "manager", "branch_id": 4},
 }
 
 # 🧠 Utils
@@ -129,6 +130,7 @@ def manager():
         phonepay = to_float(data.get("phonepay"))
         credit = to_float(data.get("credit"))
         freight = to_float(data.get("freight"))
+        discount = to_float(data.get("discount"))
         bank = to_float(data.get("bank"))
         cpp = to_float(data.get("cpp"))
         company = to_float(data.get("company_payments"))
@@ -137,14 +139,13 @@ def manager():
         packing = to_float(data.get("packing_material"))
         furniture = to_float(data.get("furniture_repair"))
         net_bills = to_float(data.get("net_bills"))
-        adv_debit = to_float(data.get("advance_debit"))
-        adv_credit = to_float(data.get("advance_credit"))
         publicity = to_float(data.get("publicity_expenses"))
         travel = to_float(data.get("travel_allowance"))
         anniversary = to_float(data.get("anniversary_expenses"))
 
         rent = to_float(data.get("rent"))
         electricity = to_float(data.get("electricity"))
+        sweeper_salary = to_float(data.get("sweeper_salary"))
 
         # salary
         salary_ids = request.form.getlist("salary_salesman_id")
@@ -161,22 +162,41 @@ def manager():
         sales_comm_amounts = request.form.getlist("sales_comm_amount")
         sales_comm_total = sum([to_float(x) for x in sales_comm_amounts])
 
+
+        # 🆕 salesman advances
+        advance_ids = request.form.getlist("advance_salesman_id")
+        advance_types = request.form.getlist("advance_type")
+        advance_amounts = request.form.getlist("advance_amount")
+
+        advance_credit_total = 0
+        advance_debit_total = 0
+
+        for typ, amt in zip(advance_types, advance_amounts):
+
+            value = to_float(amt)
+
+            if typ == "credit":
+                advance_credit_total += value
+            else:
+                advance_debit_total += value
         # date split
         month = int(date.split("-")[1])
         year = int(date.split("-")[0])
 
         # closing
         closing = (
-            opening + sale + adv_credit
+            opening + sale + advance_credit_total
             - phonepay - credit - expenses - stationary
+            - discount
             - freight - bank - cpp
             - rent - electricity
             - salary_total
+            - sweeper_salary
             - commission_total
             - sales_comm_total
             - company - taxes - chappals
             - packing - furniture - net_bills
-            - adv_debit - publicity - travel - anniversary
+            - advance_debit_total - publicity - travel - anniversary
         )
 
         # 🔹 daily entry
@@ -186,6 +206,7 @@ def manager():
             "opening_balance": opening,
             "daily_sale": sale,
             "daily_expenses": expenses,
+            "discount": discount,
             "stationary_expenses": stationary,
             "phonepay": phonepay,
             "credit_card": credit,
@@ -195,6 +216,7 @@ def manager():
             "rent": rent,
             "electricity_bill": electricity,
             "salaries": salary_total,
+            "sweeper_salary": sweeper_salary,
             "commission_total": commission_total,
             "company_payments": company,
             "taxes_expenses": taxes,
@@ -202,8 +224,6 @@ def manager():
             "packing_material": packing,
             "furniture_repair": furniture,
             "net_bills": net_bills,
-            "advance_debit": adv_debit,
-            "advance_credit": adv_credit,
             "publicity_expenses": publicity,
             "travel_allowance": travel,
             "anniversary_expenses": anniversary,
@@ -220,7 +240,8 @@ def manager():
                     "branch_id": branch_id,
                     "month": month,
                     "year": year,
-                    "salary": float(amt)
+                    "salary": float(amt),
+                    "daily_entry_id": entry_id
                 }).execute()
 
         # 🔹 special commission
@@ -241,7 +262,21 @@ def manager():
                     "salesman_id": int(sid),
                     "branch_id": branch_id,
                     "entry_datetime": datetime.now().isoformat(),
-                    "amount": float(amt)
+                    "amount": float(amt),
+                    "daily_entry_id": entry_id
+                }).execute()
+
+        # 🔹 salesman advances
+        for sid, typ, amt in zip(advance_ids, advance_types, advance_amounts):
+
+            if amt:
+
+                supabase.table("salesman_advance_entry").insert({
+                    "salesman_id": int(sid),
+                    "branch_id": branch_id,
+                    "advance_mode": typ,
+                    "amount": float(amt),
+                    "daily_entry_id": entry_id
                 }).execute()
 
         # ✅ success message + redirect
@@ -255,6 +290,8 @@ def manager():
         "manager.html",
         opening=opening,
         branch_salesmen=branch_salesmen,
+        overall_balance=0,
+        advance_report=[],
         other_salesmen=other_salesmen
     )
 
@@ -275,8 +312,37 @@ def admin():
     branch_id = request.form.get("branch_id")
     report_type = request.form.get("report_type")
 
+    daily_ids = []
+
+    if from_date and to_date:
+
+        daily_query = supabase.table("daily_entry")\
+            .select("id")
+
+        daily_query = daily_query.gte("entry_date", from_date)\
+                                .lte("entry_date", to_date)
+
+        if branch_id not in [None, "", "None", "all"]:
+            daily_query = daily_query.eq("branch_id", int(branch_id))
+
+        daily_data = daily_query.execute().data
+
+        daily_ids = [x["id"] for x in daily_data]
+
+    action = request.form.get("action")
+
+    advance_salesman_id = request.form.get("advance_salesman_id")
+
+    advance_from_date = request.form.get("advance_from_date")
+
+    advance_to_date = request.form.get("advance_to_date")
+
     # Branches
     branches = supabase.table("branch").select("id,name").execute().data
+    salesmen = supabase.table("salesman")\
+        .select("id,name")\
+        .execute().data
+
 
     # 💰 Cash
     branch_cash_list = []
@@ -299,6 +365,9 @@ def admin():
 
         total_cash += cash
 
+    advance_report = []
+    overall_balance = 0
+
     # =========================
     # DEFAULT LOAD
     # =========================
@@ -311,7 +380,102 @@ def admin():
             total_cash=total_cash,
             from_date=from_date,
             to_date=to_date,
-            selected_branch=branch_id
+            selected_branch=branch_id,
+            salesmen=salesmen,
+            overall_balance=0,
+            advance_report=[]
+        )
+
+    # =========================
+    # 💵 ADVANCES
+    # =========================
+
+    if action == "advance_report":
+
+        # 🔹 get daily ids from selected range
+        advance_daily_ids = []
+
+        daily_query = supabase.table("daily_entry")\
+            .select("id, entry_date")
+        
+        if branch_id not in [None, "", "None", "all"]:
+            daily_query = daily_query.eq("branch_id", int(branch_id))
+
+        if advance_from_date and advance_to_date:
+
+            daily_query = daily_query.gte(
+                "entry_date",
+                advance_from_date
+            ).lte(
+                "entry_date",
+                advance_to_date
+            )
+
+        daily_data = daily_query.execute().data
+
+        advance_daily_ids = [x["id"] for x in daily_data]
+        print("ADVANCE IDS:", advance_daily_ids)
+
+        # 🔹 selected period query
+        query = supabase.table("salesman_advance_entry")\
+            .select("*")\
+            .eq("salesman_id", int(advance_salesman_id))
+
+        if advance_daily_ids:
+            query = query.in_("daily_entry_id", advance_daily_ids)
+        else:
+            query = query.eq("daily_entry_id", -1)
+
+        data = query.execute().data
+
+        # 🔹 report rows
+        for row in data:
+
+            daily_res = supabase.table("daily_entry")\
+                .select("entry_date")\
+                .eq("id", row["daily_entry_id"])\
+                .execute()
+
+            entry_date = ""
+
+            if daily_res.data:
+                entry_date = daily_res.data[0]["entry_date"]
+
+            advance_report.append({
+                "date": entry_date,
+                "type": row["advance_mode"],
+                "amount": row["amount"]
+            })
+
+        # 🔥 OVERALL BALANCE (ALL TIME)
+        overall_query = supabase.table("salesman_advance_entry")\
+            .select("advance_mode, amount")\
+            .eq("salesman_id", int(advance_salesman_id))\
+            .execute()
+
+        for row in overall_query.data:
+
+            if row["advance_mode"] == "debit":
+                overall_balance -= row["amount"]
+
+            else:
+                overall_balance += row["amount"]
+
+        return render_template(
+            "admin.html",
+            branches=branches,
+            salesmen=salesmen,
+            branch_cash_list=branch_cash_list,
+            total_cash=total_cash,
+            advance_report=advance_report,
+            overall_balance=overall_balance,
+            selected_salesman=advance_salesman_id,
+            advance_from_date=advance_from_date,
+            advance_to_date=advance_to_date,
+            from_date=from_date,
+            to_date=to_date,
+            selected_branch=branch_id,
+            report_type=None
         )
 
     # =========================
@@ -322,36 +486,39 @@ def admin():
         query = supabase.table("daily_entry").select("*")
 
         if from_date and to_date:
-            query = query.gte("entry_date", from_date).lte("entry_date", to_date)
+            query = query.gte("entry_date", from_date)\
+                        .lte("entry_date", to_date)
 
-        if branch_id and branch_id != "all":
+        if branch_id not in [None, "", "None", "all"]:
             query = query.eq("branch_id", int(branch_id))
 
         data = query.execute().data
 
         total_sales = total_expenses = total_stationary = 0
+        base_salary_total = 0
         total_phonepay = total_credit = total_freight = 0
         total_bank = total_cpp = total_discount = 0
-        total_rent = total_electricity = total_salary = 0
+        total_rent = total_electricity = total_salary = total_sweeper_salary = 0
         total_commission = 0
-
         total_company = total_taxes = total_chappals = 0
         total_packing = total_furniture = total_net_bills = 0
-        total_adv_debit = total_adv_credit = 0
         total_publicity = total_travel = total_anniversary = 0
 
-        monthly_rent = monthly_electricity = monthly_salary = monthly_net_bills = 0
+        monthly_rent = monthly_electricity = monthly_salary = monthly_sweeper_salary = monthly_net_bills = 0
 
         # ✅ FIX 1: move outside loop
         sales_comm_total = 0
 
         # ✅ FIX 2: safe date usage
         if from_date and to_date:
-            sales_data = supabase.table("salesman_sales_commission")\
-                .select("amount")\
-                .gte("entry_datetime", from_date + " 00:00:00")\
-                .lte("entry_datetime", to_date + " 23:59:59")\
-                .execute().data
+            sales_query = supabase.table("salesman_sales_commission")\
+                .select("amount")
+
+            if daily_ids:
+                sales_query = sales_query.in_("daily_entry_id", daily_ids)
+
+            sales_data = sales_query.execute().data
+            
         else:
             sales_data = supabase.table("salesman_sales_commission")\
                 .select("amount")\
@@ -365,11 +532,10 @@ def admin():
         special_query = supabase.table("special_commission")\
             .select("amount")
         
-        if from_date and to_date:
-            special_query = special_query.gte("created_at", from_date + " 00:00:00")\
-                                         .lte("created_at", to_date + " 23:59:59")
+        if daily_ids:
+            special_query = special_query.in_("daily_entry_id", daily_ids)
         
-        if branch_id and branch_id != "all":
+        if branch_id not in [None, "", "None", "all"]:
             special_query = special_query.eq("branch_id", int(branch_id))
         
         special_data = special_query.execute().data
@@ -392,6 +558,9 @@ def admin():
             total_rent += r.get("rent", 0)
             total_electricity += r.get("electricity_bill", 0)
             total_salary += r.get("salaries", 0)
+            base_salary_total += r.get("salaries", 0)
+            total_sweeper_salary += r.get("sweeper_salary", 0)
+            monthly_sweeper_salary += r.get("sweeper_salary", 0)
             total_commission += r.get("commission_total", 0)
 
             total_company += r.get("company_payments", 0)
@@ -400,8 +569,6 @@ def admin():
             total_packing += r.get("packing_material", 0)
             total_furniture += r.get("furniture_repair", 0)
             total_net_bills += r.get("net_bills", 0)
-            total_adv_debit += r.get("advance_debit", 0)
-            total_adv_credit += r.get("advance_credit", 0)
             total_publicity += r.get("publicity_expenses", 0)
             total_travel += r.get("travel_allowance", 0)
             total_anniversary += r.get("anniversary_expenses", 0)
@@ -413,10 +580,13 @@ def admin():
 
 
         # ✅ FINAL SALARY FIX
-        total_salary = total_salary + special_total + sales_comm_total
-        print("DEBUG → total_salary:", total_salary)
-        print("DEBUG → special_total:", special_total)
-        print("DEBUG → sales_comm_total:", sales_comm_total)
+        total_salary = (
+            total_salary
+            + special_total
+            + sales_comm_total
+        )
+
+
         return render_template(
             "admin.html",
             report_type=report_type,
@@ -433,6 +603,11 @@ def admin():
             total_rent=total_rent,
             total_electricity=total_electricity,
             total_salary=total_salary,
+            base_salary_total=base_salary_total,
+            special_total=special_total,
+            sales_comm_total=sales_comm_total,
+            
+            
             total_commission=total_commission,
             total_company=total_company,
             total_taxes=total_taxes,
@@ -440,8 +615,6 @@ def admin():
             total_packing=total_packing,
             total_furniture=total_furniture,
             total_net_bills=total_net_bills,
-            total_adv_debit=total_adv_debit,
-            total_adv_credit=total_adv_credit,
             total_publicity=total_publicity,
             total_travel=total_travel,
             total_anniversary=total_anniversary,
@@ -451,10 +624,19 @@ def admin():
             monthly_net_bills=monthly_net_bills,
             branch_cash_list=branch_cash_list,
             total_cash=total_cash,
-            sales_comm_total=sales_comm_total,
+            
             from_date=from_date,
             to_date=to_date,
-            selected_branch=branch_id
+            selected_branch=branch_id,
+            salesmen=salesmen,
+            total_sweeper_salary=total_sweeper_salary,
+            monthly_sweeper_salary=monthly_sweeper_salary,
+            advance_report=advance_report,
+            overall_balance=overall_balance,
+            selected_salesman=advance_salesman_id,
+            advance_from_date=advance_from_date,
+            advance_to_date=advance_to_date
+
         )
 
     # =========================
@@ -466,12 +648,11 @@ def admin():
             .select("amount, salesman_id")
     
         # ✅ FIX 1: safe date filter
-        if from_date and to_date:
-            query = query.gte("entry_datetime", from_date + " 00:00:00")\
-                         .lte("entry_datetime", to_date + " 23:59:59")
+        if daily_ids:
+            query = query.in_("daily_entry_id", daily_ids)
     
         # ✅ FIX 2: branch filter
-        if branch_id and branch_id != "all":
+        if branch_id not in [None, "", "None", "all"]:
             query = query.eq("branch_id", int(branch_id))
     
         sales_comm_data = query.execute().data
@@ -482,7 +663,7 @@ def admin():
             sid = row["salesman_id"]
     
             res = supabase.table("salesman")\
-                .select("name")\
+                .select("name, branch_id")\
                 .eq("id", sid)\
                 .execute()
     
@@ -499,7 +680,10 @@ def admin():
             total_cash=total_cash,
             from_date=from_date,
             to_date=to_date,
-            selected_branch=branch_id
+            selected_branch=branch_id,
+            overall_balance=0,
+            salesmen=salesmen,
+            advance_report=[]
         )
     elif report_type == "commission":
 
@@ -507,13 +691,10 @@ def admin():
             .select("amount, salesman_id")
     
         # ✅ Date filter
-        if from_date and to_date:
-            query = query.gte("created_at", from_date + " 00:00:00")\
-                         .lte("created_at", to_date + " 23:59:59")
+        if daily_ids:
+            query = query.in_("daily_entry_id", daily_ids)
     
-        # ✅ Branch filter (NOW VALID because column exists)
-        if branch_id and branch_id != "all":
-            query = query.eq("branch_id", int(branch_id))
+        
     
         data = query.execute().data
     
@@ -523,13 +704,27 @@ def admin():
             sid = row["salesman_id"]
     
             res = supabase.table("salesman")\
-                .select("name")\
+                .select("name, branch_id")\
                 .eq("id", sid)\
                 .execute()
-    
-            name = res.data[0]["name"] if res.data else "Unknown"
-    
-            commission_report[name] = commission_report.get(name, 0) + row["amount"]
+
+            if not res.data:
+                continue
+
+            salesman = res.data[0]
+
+            # branch salesman filter
+            if branch_id not in [None, "", "None", "all"]:
+
+                if salesman["branch_id"] != int(branch_id):
+                    continue
+
+            name = salesman["name"]
+
+            commission_report[name] = (
+                commission_report.get(name, 0)
+                + row["amount"]
+            )
     
         return render_template(
             "admin.html",
@@ -540,7 +735,10 @@ def admin():
             total_cash=total_cash,
             from_date=from_date,
             to_date=to_date,
-            selected_branch=branch_id
+            salesmen=salesmen,
+            selected_branch=branch_id,
+            overall_balance=0,
+            advance_report=[]
         )
 
     
@@ -554,12 +752,11 @@ def admin():
         salary_query = supabase.table("salesman_salary")\
             .select("salary, salesman_id")
     
-        if branch_id and branch_id != "all":
+        if branch_id not in [None, "", "None", "all"]:
             salary_query = salary_query.eq("branch_id", int(branch_id))
     
-        if from_date and to_date:
-            salary_query = salary_query.gte("created_at", from_date + " 00:00:00")\
-                                       .lte("created_at", to_date + " 23:59:59")
+        if daily_ids:
+            salary_query = salary_query.in_("daily_entry_id", daily_ids)
     
         salary_data = salary_query.execute().data
     
@@ -567,7 +764,7 @@ def admin():
             sid = row["salesman_id"]
     
             res = supabase.table("salesman")\
-                .select("name")\
+                .select("name, branch_id")\
                 .eq("id", sid)\
                 .execute()
     
@@ -575,41 +772,51 @@ def admin():
     
             salary_map[name] = salary_map.get(name, 0) + row["salary"]
     
-        # 🔹 Special Commission (WITH branch + date filter)
+        # 🔹 Special Commission (WITH date filter)
         special_query = supabase.table("special_commission")\
             .select("amount, salesman_id")
-    
-        if branch_id and branch_id != "all":
-            special_query = special_query.eq("branch_id", int(branch_id))
-    
-        if from_date and to_date:
-            special_query = special_query.gte("created_at", from_date + " 00:00:00")\
-                                         .lte("created_at", to_date + " 23:59:59")
-    
+
+        # ✅ ONLY date filter
+        if daily_ids:
+            special_query = special_query.in_("daily_entry_id", daily_ids)
+
         special_data = special_query.execute().data
-    
+
         for row in special_data:
             sid = row["salesman_id"]
-    
+
             res = supabase.table("salesman")\
-                .select("name")\
+                .select("name, branch_id")\
                 .eq("id", sid)\
                 .execute()
-    
-            name = res.data[0]["name"] if res.data else "Unknown"
-    
-            special_map[name] = special_map.get(name, 0) + row["amount"]
+
+            if not res.data:
+                continue
+
+            salesman = res.data[0]
+
+            # ✅ filter by salesman own branch
+            if branch_id not in [None, "", "None", "all"]:
+
+                if salesman["branch_id"] != int(branch_id):
+                    continue
+
+            name = salesman["name"]
+
+            special_map[name] = (
+                special_map.get(name, 0)
+                + row["amount"]
+            )
     
         # 🔹 Sales Commission (WITH branch + date filter)
         sales_query = supabase.table("salesman_sales_commission")\
             .select("amount, salesman_id")
     
-        if branch_id and branch_id != "all":
+        if branch_id not in [None, "", "None", "all"]:
             sales_query = sales_query.eq("branch_id", int(branch_id))
     
-        if from_date and to_date:
-            sales_query = sales_query.gte("entry_datetime", from_date + " 00:00:00")\
-                                     .lte("entry_datetime", to_date + " 23:59:59")
+        if daily_ids:
+            sales_query = sales_query.in_("daily_entry_id", daily_ids)
     
         sales_data = sales_query.execute().data
     
@@ -617,7 +824,7 @@ def admin():
             sid = row["salesman_id"]
     
             res = supabase.table("salesman")\
-                .select("name")\
+                .select("name, branch_id")\
                 .eq("id", sid)\
                 .execute()
     
@@ -655,7 +862,15 @@ def admin():
             total_cash=total_cash,
             from_date=from_date,
             to_date=to_date,
-            selected_branch=branch_id
+            salesmen=salesmen,
+            selected_branch=branch_id,
+            overall_balance=0,
+            advance_report=[]
         )
+    
+
+
+
+
     
 app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
