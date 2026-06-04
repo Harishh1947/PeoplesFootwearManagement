@@ -125,6 +125,7 @@ def manager():
 
         # values
         sale = to_float(data.get("sale"))
+        manual_sale = to_float(data.get("manual_sale"))
         expenses = to_float(data.get("expenses"))
         stationary = to_float(data.get("stationary"))
         phonepay = to_float(data.get("phonepay"))
@@ -185,7 +186,7 @@ def manager():
 
         # closing
         closing = (
-            opening + sale + advance_credit_total
+            opening + sale + manual_sale + advance_credit_total 
             - phonepay - credit - expenses - stationary
             - discount
             - freight - bank - cpp
@@ -205,6 +206,7 @@ def manager():
             "entry_date": date,
             "opening_balance": opening,
             "daily_sale": sale,
+            "manual_sale": manual_sale,
             "daily_expenses": expenses,
             "discount": discount,
             "stationary_expenses": stationary,
@@ -495,6 +497,7 @@ def admin():
         data = query.execute().data
 
         total_sales = total_expenses = total_stationary = 0
+        total_manual_sale = 0
         base_salary_total = 0
         total_phonepay = total_credit = total_freight = 0
         total_bank = total_cpp = total_discount = 0
@@ -532,8 +535,6 @@ def admin():
         special_query = supabase.table("special_commission")\
             .select("amount")
         
-        if daily_ids:
-            special_query = special_query.in_("daily_entry_id", daily_ids)
         
         if branch_id not in [None, "", "None", "all"]:
             special_query = special_query.eq("branch_id", int(branch_id))
@@ -547,6 +548,7 @@ def admin():
 
         for r in data:
             total_sales += r.get("daily_sale", 0)
+            total_manual_sale += r.get("manual_sale", 0)
             total_expenses += r.get("daily_expenses", 0)
             total_stationary += r.get("stationary_expenses", 0)
             total_phonepay += r.get("phonepay", 0)
@@ -592,6 +594,7 @@ def admin():
             report_type=report_type,
             branches=branches,
             total_sales=total_sales,
+            total_manual_sale=total_manual_sale,
             total_expenses=total_expenses,
             total_stationary=total_stationary,
             total_phonepay=total_phonepay,
@@ -691,8 +694,19 @@ def admin():
             .select("amount, salesman_id")
     
         # ✅ Date filter
-        if daily_ids:
-            query = query.in_("daily_entry_id", daily_ids)
+        # ✅ filter only by date
+        if from_date and to_date:
+
+            daily_res = supabase.table("daily_entry")\
+                .select("id")\
+                .gte("entry_date", from_date)\
+                .lte("entry_date", to_date)\
+                .execute()
+
+            all_date_daily_ids = [x["id"] for x in daily_res.data]
+
+            if all_date_daily_ids:
+                query = query.in_("daily_entry_id", all_date_daily_ids)
     
         
     
@@ -712,12 +726,12 @@ def admin():
                 continue
 
             salesman = res.data[0]
-
-            # branch salesman filter
+            # ✅ filter using salesman assigned branch
             if branch_id not in [None, "", "None", "all"]:
 
-                if salesman["branch_id"] != int(branch_id):
+                if int(salesman["branch_id"]) != int(branch_id):
                     continue
+
 
             name = salesman["name"]
 
@@ -755,8 +769,17 @@ def admin():
         if branch_id not in [None, "", "None", "all"]:
             salary_query = salary_query.eq("branch_id", int(branch_id))
     
-        if daily_ids:
-            salary_query = salary_query.in_("daily_entry_id", daily_ids)
+        # ✅ filter only by date
+        if from_date and to_date:
+
+            daily_res = supabase.table("daily_entry")\
+                .select("id")\
+                .gte("entry_date", from_date)\
+                .lte("entry_date", to_date)\
+                .execute()
+
+            all_date_daily_ids = [x["id"] for x in daily_res.data]
+
     
         salary_data = salary_query.execute().data
     
@@ -772,13 +795,22 @@ def admin():
     
             salary_map[name] = salary_map.get(name, 0) + row["salary"]
     
-        # 🔹 Special Commission (WITH date filter)
+        # 🔹 Special Commission
         special_query = supabase.table("special_commission")\
             .select("amount, salesman_id")
 
-        # ✅ ONLY date filter
-        if daily_ids:
-            special_query = special_query.in_("daily_entry_id", daily_ids)
+        # ✅ filter only by date
+        if from_date and to_date:
+
+            daily_res = supabase.table("daily_entry")\
+                .select("id")\
+                .gte("entry_date", from_date)\
+                .lte("entry_date", to_date)\
+                .execute()
+
+            all_date_daily_ids = [x["id"] for x in daily_res.data]
+
+
 
         special_data = special_query.execute().data
 
