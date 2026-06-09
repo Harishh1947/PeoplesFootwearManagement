@@ -23,10 +23,10 @@ app.secret_key = "your_secret_key_here"
 # 🔐 Users
 users = {
     "admin": {"password": "admin123", "role": "admin"},
-    "b1": {"password": "123", "role": "manager", "branch_id": 1},
-    "b2": {"password": "123", "role": "manager", "branch_id": 2},
-    "b3": {"password": "123", "role": "manager", "branch_id": 3},
-    "b4": {"password": "123", "role": "manager", "branch_id": 4},
+    "popular": {"password": "cpp", "role": "manager", "branch_id": 1},
+    "peoples": {"password": "plk", "role": "manager", "branch_id": 2},
+    "peoples": {"password": "amd", "role": "manager", "branch_id": 3},
+    "peoples": {"password": "cpp", "role": "manager", "branch_id": 4},
 }
 
 # 🧠 Utils
