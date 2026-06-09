@@ -24,8 +24,8 @@ app.secret_key = "your_secret_key_here"
 users = {
     "admin": {"password": "admin123", "role": "admin"},
     "popular": {"password": "cpp", "role": "manager", "branch_id": 1},
-    "peoples": {"password": "plk", "role": "manager", "branch_id": 2},
-    "peoples": {"password": "amd", "role": "manager", "branch_id": 3},
+    "peoples2": {"password": "plk", "role": "manager", "branch_id": 2},
+    "peoples3": {"password": "amd", "role": "manager", "branch_id": 3},
     "peoples": {"password": "cpp", "role": "manager", "branch_id": 4},
 }
 
