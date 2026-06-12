@@ -111,6 +111,64 @@ def manager():
 
         data = request.form
         date = data.get("date")
+        from datetime import datetime
+
+        if date and date < "2026-06-01":
+            session["msg"] = "❌ Dates before 01-06-2026 are locked."
+            return redirect("/manager")
+        action = data.get("action")
+
+        if action == "load_entry":
+
+            existing = supabase.table("daily_entry")\
+                .select("*")\
+                .eq("branch_id", branch_id)\
+                .eq("entry_date", date)\
+                .execute()
+
+            if existing.data:
+
+                entry = existing.data[0]
+                entry_id = entry["id"]
+
+                special_commissions = supabase.table("special_commission")\
+                    .select("*")\
+                    .eq("daily_entry_id", entry_id)\
+                    .execute().data
+
+
+                salaries = supabase.table("salesman_salary")\
+                    .select("*")\
+                    .eq("daily_entry_id", entry_id)\
+                    .execute().data
+
+                sales_commissions = supabase.table("salesman_sales_commission")\
+                    .select("*")\
+                    .eq("daily_entry_id", entry_id)\
+                    .execute().data
+
+                advances = supabase.table("salesman_advance_entry")\
+                    .select("*")\
+                    .eq("daily_entry_id", entry_id)\
+                    .execute().data
+
+                return render_template(
+                    "manager.html",
+                    opening=opening,
+                    branch_salesmen=branch_salesmen,
+                    other_salesmen=other_salesmen,
+                    loaded_entry=entry,
+                    special_commissions=special_commissions,
+                    salaries=salaries,
+                    sales_commissions=sales_commissions,
+                    advances=advances,
+                    view_mode=True,
+                    overall_balance=0,
+                    advance_report=[]
+                )
+
+            session["msg"] = "❌ No entry found for this date"
+            return redirect("/manager")
 
         # ❗ duplicate check
         existing = supabase.table("daily_entry")\
@@ -119,7 +177,7 @@ def manager():
             .eq("entry_date", date)\
             .execute()
 
-        if existing.data:
+        if existing.data and action != "load_entry":
             session["msg"] = "❌ Entry already exists!"
             return redirect("/manager")
 
@@ -294,7 +352,13 @@ def manager():
         branch_salesmen=branch_salesmen,
         overall_balance=0,
         advance_report=[],
-        other_salesmen=other_salesmen
+        other_salesmen=other_salesmen,
+        loaded_entry=None,
+        view_mode=False,
+        special_commissions=[],
+        salaries=[],
+        sales_commissions=[],
+        advances=[]
     )
 
 
