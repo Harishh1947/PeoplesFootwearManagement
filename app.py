@@ -570,6 +570,7 @@ def admin():
         total_company = total_taxes = total_chappals = 0
         total_packing = total_furniture = total_net_bills = 0
         total_publicity = total_travel = total_anniversary = 0
+        total_adv_credit = 0
 
         monthly_rent = monthly_electricity = monthly_salary = monthly_sweeper_salary = monthly_net_bills = 0
 
@@ -607,6 +608,19 @@ def admin():
         
         for row in special_data:
             special_total += row.get("amount", 0)
+
+        adv_query = supabase.table("salesman_advance_entry")\
+            .select("advance_mode, amount")
+
+        if daily_ids:
+            adv_query = adv_query.in_("daily_entry_id", daily_ids)
+
+        adv_data = adv_query.execute().data
+
+        for row in adv_data:
+
+            if row["advance_mode"] == "credit":
+                total_adv_credit += row["amount"]
 
 
 
@@ -659,6 +673,7 @@ def admin():
             branches=branches,
             total_sales=total_sales,
             total_manual_sale=total_manual_sale,
+            total_adv_credit=total_adv_credit,
             total_expenses=total_expenses,
             total_stationary=total_stationary,
             total_phonepay=total_phonepay,
@@ -703,7 +718,6 @@ def admin():
             selected_salesman=advance_salesman_id,
             advance_from_date=advance_from_date,
             advance_to_date=advance_to_date
-
         )
 
     # =========================
@@ -717,10 +731,7 @@ def admin():
         # ✅ FIX 1: safe date filter
         if daily_ids:
             query = query.in_("daily_entry_id", daily_ids)
-    
-        # ✅ FIX 2: branch filter
-        if branch_id not in [None, "", "None", "all"]:
-            query = query.eq("branch_id", int(branch_id))
+
     
         sales_comm_data = query.execute().data
     
@@ -734,9 +745,22 @@ def admin():
                 .eq("id", sid)\
                 .execute()
     
-            name = res.data[0]["name"] if res.data else "Unknown"
-    
-            sales_comm_report[name] = sales_comm_report.get(name, 0) + row["amount"]
+            if not res.data:
+                continue
+
+            salesman = res.data[0]
+
+            if branch_id not in [None, "", "None", "all"]:
+
+                if salesman["branch_id"] != int(branch_id):
+                    continue
+
+            name = salesman["name"]
+
+            sales_comm_report[name] = (
+                sales_comm_report.get(name, 0)
+                + row["amount"]
+            )
     
         return render_template(
             "admin.html",
@@ -908,8 +932,7 @@ def admin():
         sales_query = supabase.table("salesman_sales_commission")\
             .select("amount, salesman_id")
     
-        if branch_id not in [None, "", "None", "all"]:
-            sales_query = sales_query.eq("branch_id", int(branch_id))
+        
     
         if daily_ids:
             sales_query = sales_query.in_("daily_entry_id", daily_ids)
@@ -924,9 +947,22 @@ def admin():
                 .eq("id", sid)\
                 .execute()
     
-            name = res.data[0]["name"] if res.data else "Unknown"
-    
-            sales_map[name] = sales_map.get(name, 0) + row["amount"]
+            if not res.data:
+                continue
+
+            salesman = res.data[0]
+
+            if branch_id not in [None, "", "None", "all"]:
+
+                if salesman["branch_id"] != int(branch_id):
+                    continue
+
+            name = salesman["name"]
+
+            sales_map[name] = (
+                sales_map.get(name, 0)
+                + row["amount"]
+            )
     
         # 🔹 Combine
         final_salary_report = {}
