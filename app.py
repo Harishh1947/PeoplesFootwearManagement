@@ -24,8 +24,8 @@ app.secret_key = "your_secret_key_here"
 users = {
     "admin": {"password": "admin123", "role": "admin"},
     "popular": {"password": "cpp", "role": "manager", "branch_id": 1},
-    "peoples2": {"password": "plk", "role": "manager", "branch_id": 2},
-    "peoples3": {"password": "amd", "role": "manager", "branch_id": 3},
+    "peoples2": {"password": "plkd", "role": "manager", "branch_id": 2},
+    "peoples4": {"password": "amd", "role": "manager", "branch_id": 3},
     "peoples": {"password": "cpp", "role": "manager", "branch_id": 4},
 }
 
@@ -56,19 +56,26 @@ def get_opening(branch_id):
 # 🔐 Login
 @app.route("/", methods=["GET", "POST"])
 def login():
+
     if request.method == "POST":
+
         u = request.form["username"]
         p = request.form["password"]
 
         if u in users and users[u]["password"] == p:
+
             session["user"] = u
             session["role"] = users[u]["role"]
 
             if users[u]["role"] == "admin":
                 return redirect("/admin")
+
             else:
                 session["branch_id"] = users[u]["branch_id"]
                 return redirect("/manager")
+
+        session["msg"] = "❌ Invalid Username or Password"
+        return redirect("/")
 
     return render_template("login.html")
 
@@ -94,6 +101,21 @@ def manager():
     branch_id = session.get("branch_id")
     opening = get_opening(branch_id)
 
+    last_entry = supabase.table("daily_entry")\
+        .select("entry_date")\
+        .eq("branch_id", branch_id)\
+        .order("id", desc=True)\
+        .limit(1)\
+        .execute()
+
+    if last_entry.data:
+        last_updated = datetime.strptime(
+            last_entry.data[0]["entry_date"],
+            "%Y-%m-%d"
+        ).strftime("%d-%b-%Y")
+    else:
+        last_updated = "No Data"
+
     branch_salesmen = supabase.table("salesman")\
         .select("id,name")\
         .eq("branch_id", branch_id)\
@@ -111,7 +133,6 @@ def manager():
 
         data = request.form
         date = data.get("date")
-        from datetime import datetime
 
         if date and date < "2026-06-01":
             session["msg"] = "❌ Dates before 01-06-2026 are locked."
@@ -164,6 +185,7 @@ def manager():
                     advances=advances,
                     view_mode=True,
                     overall_balance=0,
+                    last_updated=last_updated,
                     advance_report=[]
                 )
 
@@ -315,7 +337,6 @@ def manager():
                 }).execute()
 
         # 🔹 sales commission
-        from datetime import datetime
         for sid, amt in zip(sales_comm_ids, sales_comm_amounts):
             if amt:
                 supabase.table("salesman_sales_commission").insert({
@@ -358,6 +379,7 @@ def manager():
         special_commissions=[],
         salaries=[],
         sales_commissions=[],
+        last_updated=last_updated,
         advances=[]
     )
 
@@ -416,17 +438,26 @@ def admin():
 
     for b in branches:
         res = supabase.table("daily_entry")\
-            .select("closing_balance")\
+            .select("closing_balance, entry_date")\
             .eq("branch_id", b["id"])\
             .order("id", desc=True)\
             .limit(1)\
             .execute()
 
         cash = res.data[0]["closing_balance"] if res.data else 0
+        if res.data:
+            last_date = datetime.strptime(
+                res.data[0]["entry_date"],
+                "%Y-%m-%d"
+            ).strftime("%d-%b-%Y")
+        else:
+            last_date = "No Data"
+
 
         branch_cash_list.append({
             "name": b["name"],
-            "cash": cash
+            "cash": cash,
+            "last_date": last_date
         })
 
         total_cash += cash

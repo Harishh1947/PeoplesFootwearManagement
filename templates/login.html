@@ -1,8 +1,17 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
+
+
 <div class="login-container">
     <h2>Login</h2>
+
+    {% if session.get("msg") %}
+    <div class="error-msg">
+        {{ session.get("msg") }}
+    </div>
+    {% set _ = session.pop("msg", None) %}
+    {% endif %}
 
     <form method="post">
         <input name="username" placeholder="Username">
@@ -10,3 +19,36 @@
         <button type="submit">Login</button>
     </form>
 </div>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const username = document.querySelector('input[name="username"]');
+    const password = document.querySelector('input[name="password"]');
+
+    username.addEventListener("keydown", function(e) {
+
+        if (e.key === "Enter") {
+
+            e.preventDefault();
+            password.focus();
+
+        }
+
+    });
+
+    password.addEventListener("keydown", function(e) {
+
+        if (e.key === "Enter") {
+
+            e.preventDefault();
+            this.form.submit();
+
+        }
+
+    });
+
+});
+
+</script>

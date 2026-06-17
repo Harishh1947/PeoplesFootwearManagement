@@ -96,3 +96,14 @@ body {
         font-size: 16px;
     }
 }
+
+
+.error-msg{
+    background:#ffe5e5;
+    color:#c00000;
+    padding:10px;
+    margin-bottom:15px;
+    border-radius:6px;
+    text-align:center;
+    font-weight:bold;
+}
